@@ -10,8 +10,10 @@
     "buildDir": "./dist",
     "riffraffFile": "./riff-raff.yaml",
     "scripts": {
-        "clean": "rm -rf dist",
-        "build": "tsc",
+        "clean": "rm -rf dist && gts clean",
+        "check": "gts check",
+        "fix": "gts fix",
+        "build": "tsc -p . && gts check",
         "local": "tsc && node dist/local.js",
         "package": "ARTEFACT_PATH=$PWD/dist VERBOSE=true riffraff-artefact"
     },
@@ -24,7 +26,8 @@
         "body-parser": "^1.18.3",
         "express": "^4.16.4",
         "node-riffraff-artefact": "^2.0.1",
-        "typescript": "^3.4.0"
+        "typescript": "^3.4.0",
+        "gts": "^0.9.0"
     },
     "dependencies": {
         "aws-sdk": "^2.441.0",
