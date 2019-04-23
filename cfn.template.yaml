@@ -1,0 +1,131 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Consent logs
+Parameters:
+  Stage:
+    Description: Stage name
+    Type: String
+    AllowedValues:
+      - CODE
+      - PROD
+    Default: CODE
+  DistBucket:
+    Description: S3 bucket holding the lambda code
+    Type: String
+    Default: aws-frontend-artifacts
+  # KinesisRole:
+  #   Description: Role that allows this lambda to write audit logs to the Kinesis Stream
+  #   Type: String
+
+Mappings:
+  Constants:
+    Stack:
+      Value: frontend
+    App:
+      Value: consent-logs
+
+Resources:
+  RestApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub
+        - ${App}-api-${Stage}
+        - App:
+            !FindInMap [Constants, App, Value]
+          Stack:
+            !FindInMap [Constants, Stack, Value]
+
+  Deployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - Method
+    Properties:
+      RestApiId: !Ref RestApi
+      StageName: api
+
+  Resource:
+    Type: AWS::ApiGateway::Resource
+    DependsOn: RestApi
+    Properties:
+      RestApiId: !Ref RestApi
+      ParentId: !GetAtt [RestApi, RootResourceId]
+      PathPart: '{proxy+}'
+  
+  # https://cjohansen.no/aws-apigw-proxy-cloudformation/
+  Method:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestApi
+      ResourceId: !Ref Resource
+      AuthorizationType: NONE
+      HttpMethod: ANY
+      RequestParameters:
+        method.request.path.proxy: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        CacheKeyParameters:
+          - 'method.request.path.proxy'
+        Uri: !Sub
+          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Lambda}/invocations
+          - { Lambda: !GetAtt Lambda.Arn }
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: ["lambda.amazonaws.com"]
+      Path: /
+      Policies:
+        - PolicyName: ConsentLogsLambdaPolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Resource: "*"
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+              # - Effect: Allow
+              #   Action: sts:AssumeRole
+              #   Resource: !Ref KinesisRole
+
+  Lambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub
+        - ${App}-lambda-${Stage}
+        - App:
+            !FindInMap [Constants, App, Value]
+          Stack:
+            !FindInMap [Constants, Stack, Value]
+      Description: Logs consent to the Data Lake
+      Handler: index.handler
+      Role: !GetAtt LambdaRole.Arn
+      Runtime: nodejs8.10
+      Code:
+        S3Bucket: !Ref DistBucket
+        S3Key: !Sub
+          - ${Stack}/${Stage}/${App}/consent-logs.zip
+          - App:
+              !FindInMap [Constants, App, Value]
+            Stack:
+              !FindInMap [Constants, Stack, Value]
+      Environment:
+        Variables:
+          KINESIS_ROLE: arn::TODO # !Ref KinesisRole
+      Tags:
+        - { Key: Stack, Value: !FindInMap [Constants, Stack, Value] }
+        - { Key: App, Value: !FindInMap [Constants, App, Value] }
+        - { Key: Stage, Value: !Ref Stage }
+  
+  LambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt Lambda.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*
