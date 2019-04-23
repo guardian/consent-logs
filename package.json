@@ -1,9 +1,9 @@
 {
-    "name": "Consent logs",
+    "name": "consent-logs",
     "version": "0.0.1",
     "author": "The Guardian <commercial.dev@theguardian.com>",
-    "description": "Track user consents and store an audit of those events in the Data
-Lake.",
+    "description": "Track user consents and store an audit of those events in the DataLake.",
+    "repository": "https://github.com/guardian/consent-logs",
     "isAwsLambda": true,
     "cloudformation": false,
     "projectName": "Frontend::Consent Logs",
@@ -12,7 +12,7 @@ Lake.",
     "scripts": {
         "clean": "rm -rf dist",
         "build": "tsc",
-        "local": "node dist/local.js",
+        "local": "tsc && node dist/local.js",
         "package": "ARTEFACT_PATH=$PWD/dist VERBOSE=true riffraff-artefact"
     },
     "devDependencies": {
