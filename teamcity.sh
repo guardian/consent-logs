@@ -9,6 +9,7 @@ npm run build
 cp package.json dist
 cp riff-raff.yaml dist
 cp cfn.template.yaml dist
+cp package-lock.json dist
 
 pushd dist
 # Ensures the RiffRaff package has the node_modules needed to run
