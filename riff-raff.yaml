@@ -8,8 +8,8 @@ deployments:
       bucket: aws-frontend-artifacts
       fileName: consent-logs.zip
       functionNames: [-consent-logs-lambda-]
-  consent-logs-cfn:
+  consent-logs-cloudformation:
     type: cloud-formation
     app: consent-logs
     parameters:
-      templatePath: cloudformation/cloudformation.yaml
+      templatePath: cloudformation/cfn.template.yaml
