@@ -12,4 +12,4 @@ deployments:
     type: cloud-formation
     app: consent-logs
     parameters:
-      templatePath: cfn.template.yaml
+      templatePath: cloudformation/cloudformation.yaml

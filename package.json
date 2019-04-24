@@ -5,7 +5,7 @@
     "description": "Track user consents and store an audit of those events in the DataLake.",
     "repository": "https://github.com/guardian/consent-logs",
     "isAwsLambda": true,
-    "cloudformation": false,
+    "cloudformation": "cfn.template.yaml",
     "projectName": "Frontend::Consent Logs",
     "buildDir": "./dist",
     "riffraffFile": "./riff-raff.yaml",
