@@ -1,0 +1,10 @@
+stacks: [frontend]
+regions: [eu-west-1]
+
+deployments:
+  consent-logs:
+    type: aws-lambda
+    parameters:
+      bucket: aws-frontend-artifacts
+      fileName: consent-logs.zip
+      functionNames: [consent-logs-lambda-]

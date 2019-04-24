@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: Consent logs
+Description: Consent logs lambda
 Parameters:
   Stage:
     Description: Stage name
