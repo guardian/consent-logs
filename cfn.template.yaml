@@ -97,7 +97,7 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: !Sub
-        - ${App}-lambda-${Stage}
+        - ${Stack}-${App}-lambda-${Stage}
         - App:
             !FindInMap [Constants, App, Value]
           Stack:
