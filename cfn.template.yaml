@@ -136,10 +136,3 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*
-
-Outputs:
-  Url:
-    Value: !Sub
-    - https://${ID}.execute-api.${AWS::Region}.amazonaws.com/${API_STAGE}
-    - ID: !GetAtt RestApi.RootResourceId
-      API_STAGE: !FindInMap [Constants, ApiGatewayStage, Value]
