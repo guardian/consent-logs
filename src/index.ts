@@ -15,7 +15,7 @@ function ok(message: string): APIGatewayProxyResult {
 const handler: APIGatewayProxyHandler =
     (event: APIGatewayProxyEvent, context: Context,
      callback: APIGatewayProxyCallback) => {
-      console.log('test');
+      console.log('test', event.path);
       callback(null, ok('ok'));
     };
 
