@@ -1,6 +1,11 @@
 import {APIGatewayProxyCallback, APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult, Context} from 'aws-lambda';
 import {URL} from 'url';
 
+interface ConsentRecord {
+  browserId: string;
+  consentStr: string;
+}
+
 function ok(message: string): APIGatewayProxyResult {
   return {
     statusCode: 200,
@@ -15,7 +20,9 @@ function ok(message: string): APIGatewayProxyResult {
 const handler: APIGatewayProxyHandler =
     (event: APIGatewayProxyEvent, context: Context,
      callback: APIGatewayProxyCallback) => {
-      console.log('test', event.path);
+      console.log('consent parameters', event.body);
+      // make consent record
+      // put onto Kinesis firehose
       callback(null, ok('ok'));
     };
 

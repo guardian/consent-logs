@@ -14,7 +14,8 @@
         "check": "gts check",
         "fix": "gts fix",
         "build": "tsc -p . && gts check",
-        "local": "tsc && node dist/local.js",
+        "prelocal": "npm run build && cp -r ./src/views ./dist/ && cp -r ./src/public ./dist/",
+        "local": "node dist/local.js",
         "package": "ARTEFACT_PATH=$PWD/dist VERBOSE=true riffraff-artefact"
     },
     "devDependencies": {
@@ -32,6 +33,7 @@
     "dependencies": {
         "aws-sdk": "^2.441.0",
         "aws4": "^1.8.0",
-        "node-fetch": "^2.3.0"
+        "node-fetch": "^2.3.0",
+        "pug": "2.0.3"
     }
 }
