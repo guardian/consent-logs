@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: Consent logs lambda
+Description: Consent logs stack with Lambda-> Kinesis Firehose-> S3
 Parameters:
   Stage:
     Description: Stage name
@@ -12,16 +12,13 @@ Parameters:
     Description: S3 bucket holding the lambda code
     Type: String
     Default: aws-frontend-artifacts
-  # KinesisRole:
-  #   Description: Role that allows this lambda to write audit logs to the Kinesis Stream
-  #   Type: String
 
 Mappings:
   Constants:
     Stack:
       Value: frontend
     App:
-      Value: consent-logs
+      Value: consent-logs-full
     ApiGatewayStage:
       Value: api
 
@@ -96,9 +93,12 @@ Resources:
                   - xray:GetSamplingRules
                   - xray:GetSamplingTargets
                   - xray:GetSamplingStatisticSummaries
-              # - Effect: Allow
-              #   Action: sts:AssumeRole
-              #   Resource: !Ref KinesisRole
+              - Effect: Allow
+                Resource: !GetAtt KinesisFirehoseDeliveryStream.Arn
+                Action: 
+                  - firehose:PutRecord
+                  - firehose:PutRecordBatch
+                  - firehose:UpdateDestination
 
   Lambda:
     Type: AWS::Lambda::Function
@@ -136,3 +136,85 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*
+
+
+# firehose to write to a cross account s3 bucket. 
+# we cannot set record format conversion in CF as of now, we will have to manually 
+# make that change once the stack is created. Also, we need a glue table with a schema if we
+# want to use record conversion. That table creation is also a one-off manual task. 
+  KinesisFirehoseDeliveryStream:
+    DependsOn:
+      - deliveryPolicy
+    Type: AWS::KinesisFirehose::DeliveryStream
+    Properties:
+      DeliveryStreamName: !Sub
+        - ${Stack}-${App}-${Stage}
+        - App:
+            !FindInMap [Constants, App, Value]
+          Stack:
+            !FindInMap [Constants, Stack, Value]
+      DeliveryStreamType: DirectPut
+      ExtendedS3DestinationConfiguration:
+        BucketARN: arn:aws:s3:::ophan-raw-consent-logs
+        BufferingHints:
+          IntervalInSeconds: '60'
+          SizeInMBs: '128'
+        CompressionFormat: UNCOMPRESSED
+        Prefix: consent-logs/
+        RoleARN: !GetAtt deliveryRole.Arn
+  
+  deliveryRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service: firehose.amazonaws.com
+            Action: 'sts:AssumeRole'
+            Condition:
+              StringEquals:
+                'sts:ExternalId': !Ref 'AWS::AccountId'
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              AWS: !Join
+                    - ''
+                    - - 'arn:aws:iam::'
+                      - !Ref 'AWS::AccountId'
+                      - ':root'
+
+  deliveryPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: ConsentLogsFirehoseDeliveryPolicy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 's3:AbortMultipartUpload'
+              - 's3:GetBucketLocation'
+              - 's3:GetObject'
+              - 's3:ListBucket'
+              - 's3:ListBucketMultipartUploads'
+              - 's3:PutObject'
+              - s3:PutObjectAcl
+            Resource:
+              - arn:aws:s3:::ophan-raw-consent-logs
+              - arn:aws:s3:::ophan-raw-consent-logs/*
+          - Effect: Allow
+            Action:
+            - glue:GetDatabase
+            - glue:GetDatabases
+            - glue:GetTable
+            - glue:GetTables
+            - glue:GetPartition
+            - glue:GetPartitions
+            - glue:BatchGetPartition
+            Resource:
+            - '*'
+      Roles:
+        - !Ref deliveryRole
