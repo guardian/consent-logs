@@ -2,9 +2,9 @@ import {APIGatewayProxyCallback, APIGatewayProxyEvent, APIGatewayProxyHandler, A
 import AWS from 'aws-sdk';
 import {URL} from 'url';
 
-interface ConsentRecord {
-  browserId: string;
-  consentStr: string;
+class ConsentRecord {
+  browserId!: string;
+  consentStr!: string;
 }
 
 AWS.config.update({region: 'eu-west-1'});
@@ -21,28 +21,46 @@ function ok(message: string): APIGatewayProxyResult {
   };
 }
 
+function bad(message: string): APIGatewayProxyResult {
+  return {
+    statusCode: 400,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*'
+    },
+    body: JSON.stringify({response: message})
+  };
+}
+
 const handler: APIGatewayProxyHandler =
     (event: APIGatewayProxyEvent, context: Context,
      callback: APIGatewayProxyCallback) => {
       // make consent record
-      // put onto Kinesis firehose
-      fh.putRecord(
-          {
-            DeliveryStreamName: 'frontend-consent-logs-full-CODE',
-            //TODO: change this foo:bar record with real record. 
-            Record: {Data: new Buffer(JSON.stringify({foo: 'bar'}))}
+      const consentRecord = new ConsentRecord();
+      if (event.body != null) {
+        const bodyJson = JSON.parse(event.body);
+        consentRecord.browserId = bodyJson['browser_id'];
+        consentRecord.consentStr = bodyJson['consent_str'];
 
-          },
-          (err, data) => {
-            if (err) {
-              console.log(err, err.stack);
-            }  // an error occurred
-            else {
-              console.log(data);
-            }  // successful response, remove later. 
-            context.done(err, data);
-          });
-      callback(null, ok('ok'));
+        // put onto Kinesis firehose
+        fh.putRecord(
+            {
+              DeliveryStreamName: 'frontend-consent-logs-full-CODE',
+              Record: {Data: new Buffer(JSON.stringify(consentRecord))}
+            },
+            (err, data) => {
+              if (err) {
+                console.log(err, err.stack);
+              }  // an error occurred
+              else {
+                console.log(data);
+              }  // successful response, remove later.
+              callback(err, ok(data.RecordId));
+            });
+
+      } else {
+        callback('Mising params', bad('Missing required parameters'));
+      }
     };
 
 export {handler};
