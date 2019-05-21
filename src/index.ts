@@ -68,7 +68,7 @@ const handler: APIGatewayProxyHandler =
         // put onto Kinesis firehose
         fh.putRecord(
             {
-              DeliveryStreamName: 'frontend-consent-logs-full-CODE',
+              DeliveryStreamName: 'frontend-consent-logs-CODE',
               Record: {Data: Buffer.from(JSON.stringify(consentRecord))}
             },
             (err, data) => {
