@@ -18,7 +18,7 @@ Mappings:
     Stack:
       Value: frontend
     App:
-      Value: consent-logs-full
+      Value: consent-logs
     ApiGatewayStage:
       Value: api
 
