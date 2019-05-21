@@ -7,27 +7,31 @@ class ConsentRecord {
   consentStr!: string;
 }
 
-function getCredentialProviderChain(): AWS.CredentialProviderChain {
-  // Initiate provider chain like this,
-  // instead of following example in the documentation:
-  // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/CredentialProviderChain.html
-  // to circumvent this issue: https://github.com/aws/aws-sdk-js/issues/2579
+// function getCredentialProviderChain(): AWS.CredentialProviderChain {
+//   // Initiate provider chain like this,
+//   // instead of following example in the documentation:
+//   //
+//   https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/CredentialProviderChain.html
+//   // to circumvent this issue: https://github.com/aws/aws-sdk-js/issues/2579
+//
+//   const sharedCredentialsProvider: provider = () =>
+//       new AWS.SharedIniFileCredentials({profile: 'frontend'});
+//
+//   // TODO: check that this is correct provider for lambda
+//   const ec2MetadataCredentialsProvider: provider = () =>
+//       new AWS.EC2MetadataCredentials();
+//
+//   return new AWS.CredentialProviderChain(
+//       [sharedCredentialsProvider, ec2MetadataCredentialsProvider]);
+// }
+//
+// const fh = new AWS.Firehose({
+//   region: 'eu-west-1',
+//   credentialProvider: getCredentialProviderChain(),
+// });
 
-  const sharedCredentialsProvider: provider = () =>
-      new AWS.SharedIniFileCredentials({profile: 'frontend'});
-
-  // TODO: check that this is correct provider for lambda
-  const ec2MetadataCredentialsProvider: provider = () =>
-      new AWS.EC2MetadataCredentials();
-
-  return new AWS.CredentialProviderChain(
-      [sharedCredentialsProvider, ec2MetadataCredentialsProvider]);
-}
-
-const fh = new AWS.Firehose({
-  region: 'eu-west-1',
-  credentialProvider: getCredentialProviderChain(),
-});
+AWS.config.update({region: 'eu-west-1'});
+const fh = new AWS.Firehose();
 
 function ok(message: string): APIGatewayProxyResult {
   return {
