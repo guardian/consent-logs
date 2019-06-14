@@ -169,7 +169,7 @@ Resources:
             Resource:
             - '*'
       Roles:
-        - !Ref deliveryRole
+        - !Ref DeliveryRole
 
   LambdaPermissionForALB:
     Type: AWS::Lambda::Permission
