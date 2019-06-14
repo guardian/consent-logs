@@ -12,6 +12,12 @@ Parameters:
     Description: S3 bucket holding the lambda code
     Type: String
     Default: aws-frontend-artifacts
+  FrontendVpcId:
+    Description: Frontend VPC ID
+    Type: AWS::EC2::VPC::Id
+  FrontendSubnets:
+    Description: Frontend Subnets to launch ALB into
+    Type: List<AWS::EC2::Subnet::Id>
 
 Mappings:
   Constants:
@@ -218,3 +224,89 @@ Resources:
             - '*'
       Roles:
         - !Ref deliveryRole
+
+  # ALB Solution
+  LambdaPermissionForALB:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt Lambda.Arn
+      Action: lambda:InvokeFunction
+      Principal: elasticloadbalancing.amazonaws.com
+      SourceArn: !Ref TargetGroupForLambda
+
+  ConsentLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties: 
+      IpAddressType: ipv4
+      LoadBalancerAttributes:
+        - Key: idle_timeout.timeout_seconds
+          Value: 10
+      Name: !Sub 
+        - ${Stack}-${App}-${Stage}
+        - App:
+            !FindInMap [Constants, App, Value]
+          Stack:
+            !FindInMap [Constants, Stack, Value]
+      Scheme: internet-facing
+      SecurityGroups: 
+        - !Ref AllowHttpSecurityGroup
+      Subnets: !Ref FrontendSubnets
+      Tags: 
+        - { Key: Stack, Value: !FindInMap [Constants, Stack, Value] }
+        - { Key: App, Value: !FindInMap [Constants, App, Value] }
+        - { Key: Stage, Value: !Ref Stage }
+      Type: application
+
+  TargetGroupForLambda:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Sub 
+        - ${Stack}-${App}-${Stage}
+        - App:
+            !FindInMap [Constants, App, Value]
+          Stack:
+            !FindInMap [Constants, Stack, Value]
+      Tags: 
+        - { Key: Stack, Value: !FindInMap [Constants, Stack, Value] }
+        - { Key: App, Value: !FindInMap [Constants, App, Value] }
+        - { Key: Stage, Value: !Ref Stage }
+      TargetGroupAttributes: 
+        - Key: lambda.multi_value_headers.enabled
+          Value: false
+      TargetType: lambda
+      Targets:  # This can only contain one lambda target if the TargetType is lambda
+        - AvailabilityZone: all
+          Id: !GetAtt Lambda.Arn
+      UnhealthyThresholdCount: 2  # Default for lambda
+
+  ConsentListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties: 
+      DefaultActions: 
+        - TargetGroupArn: !Ref TargetGroupForLambda
+          Type: forward
+      LoadBalancerArn: !Ref ConsentLoadBalancer
+      Port: 80
+      Protocol: HTTP
+
+  AllowHttpSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allows HTTP and HTTPS inbound connections
+      VpcId: !Ref FrontendVpcId
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: '80'
+        ToPort: '80'
+        CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+      - IpProtocol: -1
+        CidrIp: 0.0.0.0/0
+
+Outputs:
+  LambdaArn:
+    Value: !GetAtt Lambda.Arn
+  TargetGroupArn:
+    Value: !Ref TargetGroupForLambda
+  ALBDnsName:
+    Value: !GetAtt ConsentLoadBalancer.DNSName
