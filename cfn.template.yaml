@@ -260,8 +260,6 @@ Resources:
   TargetGroupForLambda:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      Matcher: 
-        HttpCode: 200
       Name: !Sub 
         - ${Stack}-${App}-${Stage}
         - App:
@@ -310,3 +308,5 @@ Outputs:
     Value: !GetAtt Lambda.Arn
   TargetGroupArn:
     Value: !Ref TargetGroupForLambda
+  ALBDnsName:
+    Value: !GetAtt ConsentLoadBalancer.DNSName
