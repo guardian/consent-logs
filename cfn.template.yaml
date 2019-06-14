@@ -14,16 +14,10 @@ Parameters:
     Default: aws-frontend-artifacts
   FrontendVpcId:
     Description: Frontend VPC ID
-    Type: String
-  FrontendSubnetId1a:
-    Description: Frontend Subnet 1a
-    Type: String
-  FrontendSubnetId1b:
-    Description: Frontend Subnet 1b
-    Type: String
-  FrontendSubnetId1c:
-    Description: Frontend Subnet 1c
-    Type: String
+    Type: AWS::EC2::VPC::Id
+  FrontendSubnets:
+    Description: Frontend Subnets to launch ALB into
+    Type: List<AWS::EC2::Subnet::Id>
 
 Mappings:
   Constants:
@@ -256,10 +250,7 @@ Resources:
       Scheme: internet-facing
       SecurityGroups: 
         - !Ref AllowHttpSecurityGroup
-      Subnets: 
-        - !Ref FrontendSubnetId1a
-        - !Ref FrontendSubnetId1b
-        - !Ref FrontendSubnetId1c
+      Subnets: !Ref FrontendSubnets
       Tags: 
         - { Key: Stack, Value: !FindInMap [Constants, Stack, Value] }
         - { Key: App, Value: !FindInMap [Constants, App, Value] }
