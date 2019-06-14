@@ -29,51 +29,6 @@ Mappings:
       Value: api
 
 Resources:
-  RestApi:
-    Type: AWS::ApiGateway::RestApi
-    Properties:
-      Name: !Sub
-        - ${App}-api-${Stage}
-        - App:
-            !FindInMap [Constants, App, Value]
-          Stack:
-            !FindInMap [Constants, Stack, Value]
-
-  Deployment:
-    Type: AWS::ApiGateway::Deployment
-    DependsOn:
-      - Method
-    Properties:
-      RestApiId: !Ref RestApi
-      StageName: !FindInMap [Constants, ApiGatewayStage, Value]
-
-  Resource:
-    Type: AWS::ApiGateway::Resource
-    DependsOn: RestApi
-    Properties:
-      RestApiId: !Ref RestApi
-      ParentId: !GetAtt [RestApi, RootResourceId]
-      PathPart: '{proxy+}'
-  
-  # https://cjohansen.no/aws-apigw-proxy-cloudformation/
-  Method:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      RestApiId: !Ref RestApi
-      ResourceId: !Ref Resource
-      AuthorizationType: NONE
-      HttpMethod: ANY
-      RequestParameters:
-        method.request.path.proxy: true
-      Integration:
-        Type: AWS_PROXY
-        IntegrationHttpMethod: POST
-        CacheKeyParameters:
-          - 'method.request.path.proxy'
-        Uri: !Sub
-          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Lambda}/invocations
-          - { Lambda: !GetAtt Lambda.Arn }
-
   LambdaRole:
     Type: AWS::IAM::Role
     Properties:
@@ -134,15 +89,6 @@ Resources:
         - { Key: Stack, Value: !FindInMap [Constants, Stack, Value] }
         - { Key: App, Value: !FindInMap [Constants, App, Value] }
         - { Key: Stage, Value: !Ref Stage }
-  
-  LambdaPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !GetAtt Lambda.Arn
-      Action: lambda:InvokeFunction
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/*
-
 
 # firehose to write to a cross account s3 bucket. 
 # we cannot set record format conversion in CF as of now, we will have to manually 
@@ -150,7 +96,7 @@ Resources:
 # want to use record conversion. That table creation is also a one-off manual task. 
   KinesisFirehoseDeliveryStream:
     DependsOn:
-      - deliveryPolicy
+      - DeliveryPolicy
     Type: AWS::KinesisFirehose::DeliveryStream
     Properties:
       DeliveryStreamName: !Sub
@@ -167,9 +113,9 @@ Resources:
           SizeInMBs: '128'
         CompressionFormat: UNCOMPRESSED
         Prefix: consent-logs/
-        RoleARN: !GetAtt deliveryRole.Arn
+        RoleARN: !GetAtt DeliveryRole.Arn
   
-  deliveryRole:
+  DeliveryRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -192,7 +138,7 @@ Resources:
                       - !Ref 'AWS::AccountId'
                       - ':root'
 
-  deliveryPolicy:
+  DeliveryPolicy:
     Type: AWS::IAM::Policy
     Properties:
       PolicyName: ConsentLogsFirehoseDeliveryPolicy
@@ -225,7 +171,6 @@ Resources:
       Roles:
         - !Ref deliveryRole
 
-  # ALB Solution
   LambdaPermissionForALB:
     Type: AWS::Lambda::Permission
     Properties:
