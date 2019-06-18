@@ -53,6 +53,17 @@ function bad(message: string): APIGatewayProxyResult {
   };
 }
 
+function serviceUnavailable(message: string): APIGatewayProxyResult {
+  return {
+    statusCode: 503,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*'
+    },
+    body: JSON.stringify({response: message})
+  };
+}
+
 const handler: APIGatewayProxyHandler =
     (event: APIGatewayProxyEvent, context: Context,
      callback: APIGatewayProxyCallback) => {
@@ -84,7 +95,7 @@ const handler: APIGatewayProxyHandler =
           callback('Missing params', bad('Missing required parameters'));
         }
       } else {
-        callback('Missing STREAM_NAME from the environment', bad(`Missing STREAM_NAME from the environment: STREAM_NAME: ${STREAM_NAME}`));
+        callback('Missing STREAM_NAME from the environment', serviceUnavailable(`Missing STREAM_NAME from the environment: STREAM_NAME: ${STREAM_NAME}`));
       }
     };
 
