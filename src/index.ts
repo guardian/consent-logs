@@ -2,6 +2,8 @@ import {APIGatewayProxyCallback, APIGatewayProxyEvent, APIGatewayProxyHandler, A
 import AWS from 'aws-sdk';
 import {provider} from 'aws-sdk/lib/credentials/credential_provider_chain';
 
+const STREAM_NAME: string | undefined = process.env.STREAM_NAME;
+
 class ConsentRecord {
   browserId!: string;
   consentStr!: string;
@@ -54,31 +56,35 @@ function bad(message: string): APIGatewayProxyResult {
 const handler: APIGatewayProxyHandler =
     (event: APIGatewayProxyEvent, context: Context,
      callback: APIGatewayProxyCallback) => {
-      // make consent record
-      const consentRecord = new ConsentRecord();
-      if (event.body != null) {
-        const bodyJson = JSON.parse(event.body);
-        consentRecord.browserId = bodyJson['browser_id'];
-        consentRecord.consentStr = bodyJson['consent_str'];
+      if (STREAM_NAME) {       
+        // make consent record
+        const consentRecord = new ConsentRecord();
+        if (event.body != null) {
+          const bodyJson = JSON.parse(event.body);
+          consentRecord.browserId = bodyJson['browser_id'];
+          consentRecord.consentStr = bodyJson['consent_str'];
 
-        // put onto Kinesis firehose
-        fh.putRecord(
-            {
-              DeliveryStreamName: 'frontend-consent-logs-CODE',
-              Record: {Data: Buffer.from(JSON.stringify(consentRecord))}
-            },
-            (err, data) => {
-              if (err) {
-                console.log(err, err.stack);
-              }  // an error occurred
-              else {
-                console.log(data);
-              }  // successful response, remove later.
-              callback(err, ok(data.RecordId));
-            });
+          // put onto Kinesis firehose
+          fh.putRecord(
+              {
+                DeliveryStreamName: STREAM_NAME,
+                Record: {Data: new Buffer(JSON.stringify(consentRecord))}
+              },
+              (err, data) => {
+                if (err) {
+                  console.log(err, err.stack);
+                }  // an error occurred
+                else {
+                  console.log(data);
+                }  // successful response, remove later.
+                callback(err, ok(data.RecordId));
+              });
 
+        } else {
+          callback('Missing params', bad('Missing required parameters'));
+        }
       } else {
-        callback('Mising params', bad('Missing required parameters'));
+        callback('Missing STREAM_NAME from the environment', bad(`Missing STREAM_NAME from the environment: STREAM_NAME: ${STREAM_NAME}`));
       }
     };
 

@@ -84,7 +84,7 @@ Resources:
               !FindInMap [Constants, Stack, Value]
       Environment:
         Variables:
-          KINESIS_ROLE: arn::TODO # !Ref KinesisRole
+          STREAM_NAME: !Ref KinesisFirehoseDeliveryStream
       Tags:
         - { Key: Stack, Value: !FindInMap [Constants, Stack, Value] }
         - { Key: App, Value: !FindInMap [Constants, App, Value] }
