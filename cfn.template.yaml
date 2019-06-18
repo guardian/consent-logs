@@ -177,7 +177,6 @@ Resources:
       FunctionName: !GetAtt Lambda.Arn
       Action: lambda:InvokeFunction
       Principal: elasticloadbalancing.amazonaws.com
-      SourceArn: !Ref TargetGroupForLambda
 
   ConsentLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
