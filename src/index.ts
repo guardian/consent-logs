@@ -2,7 +2,7 @@ import {APIGatewayProxyCallback, APIGatewayProxyEvent, APIGatewayProxyHandler, A
 import AWS from 'aws-sdk';
 import {provider} from 'aws-sdk/lib/credentials/credential_provider_chain';
 
-const STREAM_NAME: string | undefined = process.env.STREAM_NAME;
+const STREAM_NAME: string|undefined = process.env.STREAM_NAME;
 
 class ConsentRecord {
   browserId!: string;
@@ -67,7 +67,7 @@ function serviceUnavailable(message: string): APIGatewayProxyResult {
 const handler: APIGatewayProxyHandler =
     (event: APIGatewayProxyEvent, context: Context,
      callback: APIGatewayProxyCallback) => {
-      if (STREAM_NAME) {       
+      if (STREAM_NAME) {
         // make consent record
         const consentRecord = new ConsentRecord();
         if (event.body != null) {
@@ -95,7 +95,11 @@ const handler: APIGatewayProxyHandler =
           callback('Missing params', bad('Missing required parameters'));
         }
       } else {
-        callback('Missing STREAM_NAME from the environment', serviceUnavailable(`Missing STREAM_NAME from the environment: STREAM_NAME: ${STREAM_NAME}`));
+        callback(
+            'Missing STREAM_NAME from the environment',
+            serviceUnavailable(
+                `Missing STREAM_NAME from the environment: STREAM_NAME: ${
+                    STREAM_NAME}`));
       }
     };
 
