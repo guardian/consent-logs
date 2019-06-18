@@ -1,14 +1,33 @@
 import {APIGatewayProxyCallback, APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult, Context} from 'aws-lambda';
 import AWS from 'aws-sdk';
-import {URL} from 'url';
+import {provider} from 'aws-sdk/lib/credentials/credential_provider_chain';
 
 class ConsentRecord {
   browserId!: string;
   consentStr!: string;
 }
 
-AWS.config.update({region: 'eu-west-1'});
-const fh = new AWS.Firehose();
+function getCredentialProviderChain(): AWS.CredentialProviderChain {
+  // Initiate provider chain like this,
+  // instead of following example in the documentation:
+  //
+  // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/CredentialProviderChain.html
+  // to circumvent this issue: https://github.com/aws/aws-sdk-js/issues/2579
+
+  const sharedCredentialsProvider: provider = () =>
+      new AWS.SharedIniFileCredentials({profile: 'frontend'});
+
+  const ec2MetadataCredentialsProvider: provider = () =>
+      new AWS.EC2MetadataCredentials();
+
+  return new AWS.CredentialProviderChain(
+      [sharedCredentialsProvider, ec2MetadataCredentialsProvider]);
+}
+
+const fh = new AWS.Firehose({
+  region: 'eu-west-1',
+  credentialProvider: getCredentialProviderChain(),
+});
 
 function ok(message: string): APIGatewayProxyResult {
   return {
@@ -45,8 +64,8 @@ const handler: APIGatewayProxyHandler =
         // put onto Kinesis firehose
         fh.putRecord(
             {
-              DeliveryStreamName: 'frontend-consent-logs-full-CODE',
-              Record: {Data: new Buffer(JSON.stringify(consentRecord))}
+              DeliveryStreamName: 'frontend-consent-logs-CODE',
+              Record: {Data: Buffer.from(JSON.stringify(consentRecord))}
             },
             (err, data) => {
               if (err) {

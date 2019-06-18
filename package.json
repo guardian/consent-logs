@@ -1,39 +1,57 @@
 {
-    "name": "consent-logs",
-    "version": "0.0.1",
-    "author": "The Guardian <commercial.dev@theguardian.com>",
-    "description": "Track user consents and store an audit of those events in the DataLake.",
-    "repository": "https://github.com/guardian/consent-logs",
-    "isAwsLambda": true,
-    "cloudformation": false,
-    "projectName": "Frontend::Consent Logs",
-    "buildDir": "./dist",
-    "riffraffFile": "./riff-raff.yaml",
-    "scripts": {
-        "clean": "rm -rf dist && gts clean",
-        "check": "gts check",
-        "fix": "gts fix",
-        "build": "tsc -p . && gts check",
-        "prelocal": "npm run build && cp -r ./src/views ./dist/ ",
-        "local": "node dist/local.js",
-        "package": "ARTEFACT_PATH=$PWD/dist VERBOSE=true riffraff-artefact"
-    },
-    "devDependencies": {
-        "@types/aws4": "^1.5.1",
-        "@types/aws-lambda": "^8.10.24",
-        "@types/express": "^4.14.0",
-        "@types/node": "^11.13.7",
-        "@types/node-fetch": "^2.3.2",
-        "body-parser": "^1.18.3",
-        "express": "^4.16.4",
-        "node-riffraff-artefact": "^2.0.1",
-        "typescript": "^3.4.0",
-        "gts": "^0.9.0"
-    },
-    "dependencies": {
-        "aws-sdk": "^2.441.0",
-        "aws4": "^1.8.0",
-        "node-fetch": "^2.3.0",
-        "pug": "2.0.3"
-    }
+  "name": "consent-logs",
+  "version": "0.0.1",
+  "author": "The Guardian <commercial.dev@theguardian.com>",
+  "description": "Track user consents and store an audit of those events in the DataLake.",
+  "repository": "https://github.com/guardian/consent-logs",
+  "isAwsLambda": true,
+  "cloudformation": false,
+  "projectName": "Frontend::Consent Logs",
+  "buildDir": "./dist",
+  "riffraffFile": "./riff-raff.yaml",
+  "scripts": {
+    "dev": "node --inspect=5858 -r ts-node/register ./src/local.ts",
+    "open": "open http://localhost:9667/dev-ui",
+    "start": "concurrently \"npm run dev\" \"npm run open\"",
+    "start:watch": "nodemon",
+    "clean": "rm -rf dist && gts clean",
+    "check": "gts check",
+    "fix": "gts fix",
+    "build": "tsc -p . && gts check",
+    "prelocal": "npm run build && cp -r ./src/views ./dist/ ",
+    "local": "node dist/local.js",
+    "package": "ARTEFACT_PATH=$PWD/dist VERBOSE=true riffraff-artefact"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      ".git",
+      ".idea",
+      "dist"
+    ],
+    "watch": [
+      "src"
+    ],
+    "ext": "ts"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.24",
+    "@types/aws4": "^1.5.1",
+    "@types/express": "^4.14.0",
+    "@types/node": "^11.13.7",
+    "@types/node-fetch": "^2.3.2",
+    "body-parser": "^1.18.3",
+    "concurrently": "^4.1.0",
+    "express": "^4.16.4",
+    "gts": "^0.9.0",
+    "node-riffraff-artefact": "^2.0.1",
+    "nodemon": "^1.19.0",
+    "ts-node": "^8.1.0",
+    "typescript": "^3.4.0"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.441.0",
+    "aws4": "^1.8.0",
+    "node-fetch": "^2.3.0",
+    "pug": "2.0.3"
+  }
 }

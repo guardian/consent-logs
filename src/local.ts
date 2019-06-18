@@ -1,4 +1,4 @@
-import {APIGatewayProxyCallback, APIGatewayProxyEvent, Context} from 'aws-lambda';
+import {APIGatewayProxyEvent, Context} from 'aws-lambda';
 import bodyparser from 'body-parser';
 import express from 'express';
 import {Request, Response} from 'express';
