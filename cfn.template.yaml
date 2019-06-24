@@ -42,7 +42,6 @@ Resources:
         DNSName: !GetAtt ConsentLoadBalancer.DNSName
         HostedZoneId: !GetAtt ConsentLoadBalancer.CanonicalHostedZoneID
       HostedZoneId: !Ref HostedZoneId
-      # HostedZoneName: String
       Name: !Ref DomainName
       Region: !Ref AWS::Region
       SetIdentifier: version-1
