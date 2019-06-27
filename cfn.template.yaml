@@ -22,7 +22,10 @@ Parameters:
     Description: The HostedZone where the CNAME RecordSet will live in
     Type: AWS::Route53::HostedZone::Id
   DomainName:
-    Description: The fully qualified domain name within the hosted zone (has to match Hosted Zone domain)
+    Description: The fully qualified domain name within the hosted zone (has to match Hosted Zone domain AND certificate domain)
+    Type: String
+  CertificateArn:
+    Description: The ARN of the certificate that the ALB will use to serve requests (Domain on certificate has to match DomainName)
     Type: String
 
 Mappings:
@@ -245,12 +248,14 @@ Resources:
   ConsentListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties: 
+      Certificates:
+        - CertificateArn: !Ref CertificateArn
       DefaultActions: 
         - TargetGroupArn: !Ref TargetGroupForLambda
           Type: forward
       LoadBalancerArn: !Ref ConsentLoadBalancer
-      Port: 80
-      Protocol: HTTP
+      Port: 443
+      Protocol: HTTPS
 
   AllowHttpSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -259,8 +264,8 @@ Resources:
       VpcId: !Ref FrontendVpcId
       SecurityGroupIngress:
       - IpProtocol: tcp
-        FromPort: '80'
-        ToPort: '80'
+        FromPort: '443'
+        ToPort: '443'
         CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
       - IpProtocol: -1
