@@ -18,6 +18,12 @@ Parameters:
   FrontendSubnets:
     Description: Frontend Subnets to launch ALB into
     Type: List<AWS::EC2::Subnet::Id>
+  HostedZoneId:
+    Description: The HostedZone where the CNAME RecordSet will live in
+    Type: AWS::Route53::HostedZone::Id
+  DomainName:
+    Description: The fully qualified domain name within the hosted zone (has to match Hosted Zone domain)
+    Type: String
 
 Mappings:
   Constants:
@@ -29,6 +35,18 @@ Mappings:
       Value: api
 
 Resources:
+  ALBRecordSet:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      AliasTarget:
+        DNSName: !GetAtt ConsentLoadBalancer.DNSName
+        HostedZoneId: !GetAtt ConsentLoadBalancer.CanonicalHostedZoneID
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref DomainName
+      Region: !Ref AWS::Region
+      SetIdentifier: version-1
+      Type: A
+
   LambdaRole:
     Type: AWS::IAM::Role
     Properties:
