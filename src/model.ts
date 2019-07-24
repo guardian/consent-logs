@@ -32,7 +32,7 @@ type CMPCookie = {
 };
 
 // IsNumber is used to access an enum as a string[]
-const isNumber = (value: string): boolean => isNaN(Number(value)) === false;
+const isNumber = (value: string|number): boolean => isNaN(Number(value)) === false;
 const sourceTypes: string[] = Object.keys(SourceType).filter(source => !isNumber(source));
 const purposeTypes: string[] = Object.keys(PurposeType).filter(purpose => !isNumber(purpose));
 
@@ -59,6 +59,10 @@ const isValidPurposes = (purposeList: PurposeList): boolean =>
 
 const isValidBrowserId = (browserId: string): boolean =>
     browserId.trim().length > 0;
+
+const isValidVersion = (version: string): boolean => isNumber(version)
+
+const isValidTime = (time: number): boolean => isNumber(time)
 
 const validateObject = (jsonObject: object): boolean => {
   const keysToCheck: string[] = ['iab', 'version', 'time'];
