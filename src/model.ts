@@ -32,9 +32,9 @@ type CMPCookie = {
 };
 
 // IsNumber is used to access an enum as a string[]
-const isNumber = (value: string): boolean => isNaN(Number(value)) !== false;
-const sourceTypes: string[] = Object.keys(SourceType).filter(isNumber);
-const purposeTypes: string[] = Object.keys(PurposeType).filter(isNumber);
+const isNumber = (value: string): boolean => isNaN(Number(value)) === false;
+const sourceTypes: string[] = Object.keys(SourceType).filter(source => !isNumber(source));
+const purposeTypes: string[] = Object.keys(PurposeType).filter(purpose => !isNumber(purpose));
 
 const isValidSourceType = (sourceType: string): boolean =>
     sourceTypes.includes(sourceType);

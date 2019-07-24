@@ -16,6 +16,10 @@ describe('parseJson', () => {
     expect(parseJson('')).toBeNull();
   });
 
+  test('Should not parse an empty object', () => {
+    expect(parseJson('{}')).toBeNull();
+  });
+
   test('Should parse an object with all keys', () => {
     const validObject = {iab: 'test', version: '1', time: 123};
     expect(parseJson(JSON.stringify(validObject))).toMatchObject(validObject);
@@ -31,13 +35,13 @@ describe('isNumber', () => {
   test('All string numbers should pass', () => {
     fc.assert(fc.property(
         fc.integer(),
-        (randomNumber: number) => !isNumber(randomNumber.toString())));
+        (randomNumber: number) => isNumber(randomNumber.toString())));
     fc.assert(fc.property(
         fc.float(),
-        (randomNumber: number) => !isNumber(randomNumber.toString())));
+        (randomNumber: number) => isNumber(randomNumber.toString())));
     fc.assert(fc.property(
         fc.bigInt(),
-        (randomNumber: bigint) => !isNumber(randomNumber.toString())));
+        (randomNumber: bigint) => isNumber(randomNumber.toString())));
   });
 });
 
