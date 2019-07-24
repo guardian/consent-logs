@@ -12,6 +12,16 @@ const {
 } = _;
 
 describe('parseJson', () => {
+  const validKeys = ['iab', 'version', 'time'];
+  const validObject = {
+    iab: 'BOkNAntOkNAntAAABAENAAAAAAAAoAA',
+    version: '1',
+    time: 123,
+    source: 'www',
+    purposes: [],
+    browserId: 'abc123'
+  };
+
   test('Should not parse an empty string', () => {
     expect(parseJson('')).toBeNull();
   });
@@ -21,7 +31,6 @@ describe('parseJson', () => {
   });
 
   test('Should parse an object with all keys', () => {
-    const validObject = {iab: 'test', version: '1', time: 123};
     expect(parseJson(JSON.stringify(validObject))).toMatchObject(validObject);
   });
 

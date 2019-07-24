@@ -65,8 +65,16 @@ const isValidVersion = (version: string): boolean => isNumber(version)
 const isValidTime = (time: number): boolean => isNumber(time)
 
 const validateObject = (jsonObject: object): boolean => {
-  const keysToCheck: string[] = ['iab', 'version', 'time'];
-  return keysToCheck.every((key) => key in jsonObject);
+  const keysToCheck = {
+    'iab': isValidConsentString,
+    'version': isValidVersion,
+    'time': isValidTime,
+    'source': isValidSourceType,
+    'purposes': isValidPurposes,
+    'browserId': isValidBrowserId
+  };
+  // @ts-ignore: This is where we need to convert between types
+  return Object.keys(keysToCheck).every((key) => key in jsonObject && keysToCheck[key](jsonObject[key]));
 };
 
 const parseJson = (json: string): CMPCookie|null => {
