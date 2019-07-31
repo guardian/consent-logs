@@ -8,7 +8,10 @@ const {
   isValidPurposeType,
   isValidConsentString,
   isValidPurposes,
-  isValidBrowserId
+  isValidBrowserId,
+  sourceTypes,
+  purposeTypes,
+  isNonEmpty
 } = _;
 
 describe('parseJson', () => {
@@ -26,7 +29,7 @@ describe('parseJson', () => {
     expect(parseJson('')).toBeNull();
   });
 
-  test('Should not parse an empty object', () => {
+  test('Should not parse an empty object in a string', () => {
     expect(parseJson('{}')).toBeNull();
   });
 
@@ -41,6 +44,10 @@ describe('parseJson', () => {
 });
 
 describe('isNumber', () => {
+  test('Should not accept an empty string', () => {
+    expect(isNumber("")).toBe(false);
+  });
+
   test('All string numbers should pass', () => {
     fc.assert(fc.property(
         fc.integer(),
@@ -54,10 +61,28 @@ describe('isNumber', () => {
   });
 });
 
+describe('isNonEmpty', () => {
+  test('Should be false for an empty string', () => {
+    expect(isNonEmpty("")).toBe(false);
+  });
+  test('Should be true for all non empty strings', () => {
+    const nonEmptyString = fc.string(1, 40).filter(s => s.trim().length > 0);
+    fc.assert(
+      fc.property(nonEmptyString, (nonEmptyRandomString: string) => {
+        expect(isNonEmpty(nonEmptyRandomString)).toBe(true);
+      })
+    );
+  });
+});
+
 describe('isValidSourceType', () => {
   test('should only allow valid source types', () => {
     const sourceTypes: string[] = ['cmp-ui', 'ios', 'www', 'support'];
     expect(sourceTypes.every(isValidSourceType)).toBe(true);
+  });
+
+  test('should not allow an empty string', () => {
+    expect(isValidSourceType("")).toBe(false);
   });
 
   test('should not accept random strings', () => {
@@ -82,6 +107,13 @@ describe('isValidPurposeType', () => {
 });
 
 describe('isValidConsentString', () => {
+  // Consent string tool
+  // http://gdpr-demo.labs.quantcast.com/user-examples/cookie-workshop.html
+  test('Should accept consent strings', () => {
+    const validConsentStrings = ['BOkhG-BOkhG-BAAABAENAAAAAAAAoAA'];
+    validConsentStrings.forEach(consentString => expect(isValidConsentString(consentString)).toBe(true));
+  });
+
   test('Should not accept random strings', () => {
     fc.assert(fc.property(
         fc.unicodeString(),

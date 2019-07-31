@@ -31,6 +31,9 @@ type CMPCookie = {
   browserId: string
 };
 
+const acceptedVersions: string[] = ['1'];
+
+const isNonEmpty = (value: string): boolean => value.trim().length > 0
 // IsNumber is used to access an enum as a string[]
 const isNumber = (value: string|number): boolean => isNaN(Number(value)) === false;
 const sourceTypes: string[] = Object.keys(SourceType).filter(source => !isNumber(source));
