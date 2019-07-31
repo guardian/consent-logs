@@ -15,7 +15,6 @@ const {
 } = _;
 
 describe('parseJson', () => {
-  const validKeys = ['iab', 'version', 'time'];
   const validObject = {
     iab: 'BOkNAntOkNAntAAABAENAAAAAAAAoAA',
     version: '1',
