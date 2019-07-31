@@ -35,7 +35,7 @@ const acceptedVersions: string[] = ['1'];
 
 const isNonEmpty = (value: string): boolean => value.trim().length > 0
 // IsNumber is used to access an enum as a string[]
-const isNumber = (value: string|number): boolean => isNaN(Number(value)) === false;
+const isNumber = (value: string|number): boolean => isNonEmpty(value.toString()) && isNaN(Number(value)) === false;
 const sourceTypes: string[] = Object.keys(SourceType).filter(source => !isNumber(source));
 const purposeTypes: string[] = Object.keys(PurposeType).filter(purpose => !isNumber(purpose));
 
@@ -57,15 +57,15 @@ const isValidConsentString = (base64ConsentString: string): boolean => {
 };
 
 const isValidPurposes = (purposeList: PurposeList): boolean =>
-    Object.keys(purposeList).every(isValidPurposeType) &&
-    Object.values(purposeList).every(value => typeof value === 'boolean');
+  typeof purposeList === 'object' &&
+  Object.keys(purposeList).every(isValidPurposeType) &&
+  Object.values(purposeList).every(value => typeof value === 'boolean');
 
-const isValidBrowserId = (browserId: string): boolean =>
-    browserId.trim().length > 0;
+const isValidBrowserId = (browserId: string): boolean => isNonEmpty(browserId);
 
-const isValidVersion = (version: string): boolean => isNumber(version)
+const isValidVersion = (version: string): boolean => acceptedVersions.includes(version);
 
-const isValidTime = (time: number): boolean => isNumber(time)
+const isValidTime = (time: number): boolean => typeof time === 'number' && isNumber(time)
 
 const validateObject = (jsonObject: object): boolean => {
   const keysToCheck = {
@@ -99,5 +99,8 @@ export let _ = {
   isValidPurposeType,
   isValidConsentString,
   isValidPurposes,
-  isValidBrowserId
+  isValidBrowserId,
+  sourceTypes,
+  purposeTypes,
+  isNonEmpty,
 };
