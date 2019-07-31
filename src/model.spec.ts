@@ -245,7 +245,6 @@ describe('isNonEmpty', () => {
 
 describe('isValidSourceType', () => {
   test('should only allow valid source types', () => {
-    const sourceTypes: string[] = ['cmp-ui', 'ios', 'www', 'support'];
     expect(sourceTypes.every(isValidSourceType)).toBe(true);
   });
 
@@ -262,8 +261,6 @@ describe('isValidSourceType', () => {
 
 describe('isValidPurposeType', () => {
   test('should only allow valid purpose types', () => {
-    const purposeTypes =
-        ['essential', 'performance', 'functionality', 'personaliseaAds'];
     expect(purposeTypes.every(isValidPurposeType)).toBe(true);
   });
 
@@ -291,8 +288,7 @@ describe('isValidConsentString', () => {
 });
 
 describe('isValidPurposes', () => {
-  const purposesArbitrary = fc.constantFrom(
-      'essential', 'performance', 'functionality', 'personaliseaAds');
+  const purposesArbitrary = fc.constantFrom(...purposeTypes);
 
   test('Should accept valid purposes', () => {
     const validPurposesListArbitrary = fc.object(new fc.ObjectConstraints(
