@@ -320,18 +320,6 @@ describe('isValidPurposes', () => {
         invalidKeysPurposesListArbitrary,
         (invalidPurposes) => !isValidPurposes(invalidPurposes)));
   });
-
-  test('Should not accept other types in values', () => {
-    const invalidValuesPurposesListArbitrary =
-        fc.object(new fc.ObjectConstraints(
-                      purposesArbitrary, [fc.string(), fc.integer()], 1, 5,
-                      false, false))
-            .filter(o => Object.keys(o).length > 0);
-
-    fc.assert(fc.property(
-        invalidValuesPurposesListArbitrary,
-        (invalidPurposes) => !isValidPurposes(invalidPurposes)));
-  });
 });
 
 describe('isValidBrowserId', () => {
