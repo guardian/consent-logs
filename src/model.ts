@@ -25,7 +25,7 @@ type PurposeList = {
 type CMPCookie = {
   iab: string,
   version: string,
-  time: Date,
+  time: number,
   source: SourceString,
   purposes: PurposeList,
   browserId: string
@@ -98,6 +98,7 @@ const parseJson = (json: string): CMPCookie|null => {
 
 export {
   parseJson,
+  CMPCookie
 };
 
 export let _ = {
