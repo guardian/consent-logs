@@ -4,7 +4,6 @@ enum PurposeType {
   'essential',
   'performance',
   'functionality',
-  'personaliseaAds'
 }
 // See:
 // https://www.typescriptlang.org/docs/handbook/enums.html#enums-at-compile-time
@@ -14,7 +13,8 @@ enum SourceType {
   'cmp-ui',
   'ios',
   'www',
-  'support'
+  'support',
+  'amp',
 }
 type SourceString = keyof typeof SourceType;
 
