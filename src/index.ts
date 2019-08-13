@@ -1,8 +1,9 @@
 import {APIGatewayProxyCallback, APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult, Context} from 'aws-lambda';
 import AWS from 'aws-sdk';
 import {provider} from 'aws-sdk/lib/credentials/credential_provider_chain';
-import { getAmpConsentBody, consentModelFrom, AmpConsentBody } from './amp';
-import { CMPCookie } from './model';
+
+import {AmpConsentBody, consentModelFrom, getAmpConsentBody} from './amp';
+import {CMPCookie} from './model';
 
 const STREAM_NAME: string|undefined = process.env.STREAM_NAME;
 
@@ -66,48 +67,52 @@ function serviceUnavailable(message: string): APIGatewayProxyResult {
   };
 }
 
-const putConsentToFirehose = (cmpCookie: CMPCookie, callback: APIGatewayProxyCallback, streamName: string) => {
-  fh.putRecord(
-    {
-      DeliveryStreamName: streamName,
-      Record: {Data: new Buffer(JSON.stringify(cmpCookie))}
-    },
-    (err, data) => {
-      if (err) {
-        console.log(err, err.stack);
-      }  // an error occurred
-      else {
-        console.log(data);
-      }  // successful response, remove later.
-      callback(err, ok(data.RecordId));
-    });
-};
+const putConsentToFirehose =
+    (cmpCookie: CMPCookie, callback: APIGatewayProxyCallback,
+     streamName: string) => {
+      fh.putRecord(
+          {
+            DeliveryStreamName: streamName,
+            Record: {Data: new Buffer(JSON.stringify(cmpCookie))}
+          },
+          (err, data) => {
+            if (err) {
+              console.log(err, err.stack);
+            }  // an error occurred
+            else {
+              console.log(data);
+            }  // successful response, remove later.
+            callback(err, ok(data.RecordId));
+          });
+    };
 
-const handleAmp = (event: APIGatewayProxyEvent, context: Context,
-  callback: APIGatewayProxyCallback, streamName: string) => {
-    if (event.body) {
-      const ampConsentBody: undefined | AmpConsentBody = getAmpConsentBody(event.body);
-      if (ampConsentBody) {
-        const cmpCookie: CMPCookie = consentModelFrom(ampConsentBody.ampUserId, ampConsentBody.consentState);
-        putConsentToFirehose(cmpCookie, callback, streamName);
-      }
-      else {
+const handleAmp =
+    (event: APIGatewayProxyEvent, context: Context,
+     callback: APIGatewayProxyCallback, streamName: string) => {
+      if (event.body) {
+        const ampConsentBody: undefined|AmpConsentBody =
+            getAmpConsentBody(event.body);
+        if (ampConsentBody) {
+          const cmpCookie: CMPCookie = consentModelFrom(
+              ampConsentBody.ampUserId, ampConsentBody.consentState);
+          putConsentToFirehose(cmpCookie, callback, streamName);
+        } else {
+          callback(
+              'Body for AMP consent request seems to be invalid',
+              bad('Body for AMP consent request seems to be invalid'));
+        }
+      } else {
         callback(
-          'Body for AMP consent request seems to be invalid',
-          bad('Body for AMP consent request seems to be invalid'));
+            'No body provided in AMP request',
+            bad('No body provided in AMP request'));
       }
-    } else {
-      callback(
-        'No body provided in AMP request',
-        bad('No body provided in AMP request'));
-    }    
-};
+    };
 
 const handler: APIGatewayProxyHandler =
     (event: APIGatewayProxyEvent, context: Context,
      callback: APIGatewayProxyCallback) => {
       if (STREAM_NAME) {
-        if (event.path == '/amp') {
+        if (event.path === '/amp') {
           return handleAmp(event, context, callback, STREAM_NAME);
         } else {
           // make consent record

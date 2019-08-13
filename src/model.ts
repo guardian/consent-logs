@@ -96,10 +96,7 @@ const parseJson = (json: string): CMPCookie|null => {
   }
 };
 
-export {
-  parseJson,
-  CMPCookie
-};
+export {parseJson, CMPCookie};
 
 export let _ = {
   isNumber,
