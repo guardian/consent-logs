@@ -89,8 +89,9 @@ const getAmpConsentBody = (body: string): undefined | AmpConsentBody => {
 }
 
 export {
-    consentStringFromAmpConsent,
     getAmpConsentBody,
+    consentModelFrom,
+    AmpConsentBody
 };
 
 export let _ = {

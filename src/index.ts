@@ -1,6 +1,8 @@
 import {APIGatewayProxyCallback, APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult, Context} from 'aws-lambda';
 import AWS from 'aws-sdk';
 import {provider} from 'aws-sdk/lib/credentials/credential_provider_chain';
+import { getAmpConsentBody, consentModelFrom, AmpConsentBody } from './amp';
+import { CMPCookie } from './model';
 
 const STREAM_NAME: string|undefined = process.env.STREAM_NAME;
 
@@ -64,35 +66,76 @@ function serviceUnavailable(message: string): APIGatewayProxyResult {
   };
 }
 
+const putConsentToFirehose = (cmpCookie: CMPCookie, callback: APIGatewayProxyCallback, streamName: string) => {
+  fh.putRecord(
+    {
+      DeliveryStreamName: streamName,
+      Record: {Data: new Buffer(JSON.stringify(cmpCookie))}
+    },
+    (err, data) => {
+      if (err) {
+        console.log(err, err.stack);
+      }  // an error occurred
+      else {
+        console.log(data);
+      }  // successful response, remove later.
+      callback(err, ok(data.RecordId));
+    });
+};
+
+const handleAmp = (event: APIGatewayProxyEvent, context: Context,
+  callback: APIGatewayProxyCallback, streamName: string) => {
+    if (event.body) {
+      const ampConsentBody: undefined | AmpConsentBody = getAmpConsentBody(event.body);
+      if (ampConsentBody) {
+        const cmpCookie: CMPCookie = consentModelFrom(ampConsentBody.ampUserId, ampConsentBody.consentState);
+        putConsentToFirehose(cmpCookie, callback, streamName);
+      }
+      else {
+        callback(
+          'Body for AMP consent request seems to be invalid',
+          bad('Body for AMP consent request seems to be invalid'));
+      }
+    } else {
+      callback(
+        'No body provided in AMP request',
+        bad('No body provided in AMP request'));
+    }    
+};
+
 const handler: APIGatewayProxyHandler =
     (event: APIGatewayProxyEvent, context: Context,
      callback: APIGatewayProxyCallback) => {
       if (STREAM_NAME) {
-        // make consent record
-        const consentRecord = new ConsentRecord();
-        if (event.body != null) {
-          const bodyJson = JSON.parse(event.body);
-          consentRecord.browserId = bodyJson['browser_id'];
-          consentRecord.consentStr = bodyJson['consent_str'];
-
-          // put onto Kinesis firehose
-          fh.putRecord(
-              {
-                DeliveryStreamName: STREAM_NAME,
-                Record: {Data: new Buffer(JSON.stringify(consentRecord))}
-              },
-              (err, data) => {
-                if (err) {
-                  console.log(err, err.stack);
-                }  // an error occurred
-                else {
-                  console.log(data);
-                }  // successful response, remove later.
-                callback(err, ok(data.RecordId));
-              });
-
+        if (event.path == '/amp') {
+          return handleAmp(event, context, callback, STREAM_NAME);
         } else {
-          callback('Missing params', bad('Missing required parameters'));
+          // make consent record
+          const consentRecord = new ConsentRecord();
+          if (event.body != null) {
+            const bodyJson = JSON.parse(event.body);
+            consentRecord.browserId = bodyJson['browser_id'];
+            consentRecord.consentStr = bodyJson['consent_str'];
+
+            // put onto Kinesis firehose
+            fh.putRecord(
+                {
+                  DeliveryStreamName: STREAM_NAME,
+                  Record: {Data: new Buffer(JSON.stringify(consentRecord))}
+                },
+                (err, data) => {
+                  if (err) {
+                    console.log(err, err.stack);
+                  }  // an error occurred
+                  else {
+                    console.log(data);
+                  }  // successful response, remove later.
+                  callback(err, ok(data.RecordId));
+                });
+
+          } else {
+            callback('Missing params', bad('Missing required parameters'));
+          }
         }
       } else {
         callback(
