@@ -63,8 +63,7 @@ const getAmpUserId = (ampUserId: string): undefined|string =>
     typeof ampUserId === 'string' && ampUserId ? ampUserId : undefined;
 
 const getConsentState = (consentState: boolean): undefined|boolean =>
-    typeof consentState === 'boolean' && consentState ? consentState :
-                                                        undefined;
+    typeof consentState === 'boolean' ? consentState : undefined;
 
 const getConsentStateValue = (consentStateValue: string): undefined|string =>
     typeof consentStateValue === 'string' && consentStateValue ?
@@ -76,14 +75,14 @@ const getAmpConsentBody = (body: string): undefined|AmpConsentBody => {
   try {
     const parsedJson = JSON.parse(body);
 
-    const consentInstanceId =
+    const consentInstanceId: undefined|string =
         getConsentInstanceId(parsedJson.consentInstanceId);
-    const ampUserId = getAmpUserId(parsedJson.ampUserId);
-    const consentState = getConsentState(parsedJson.consentState);
-    const consentStateValue =
+    const ampUserId: undefined|string = getAmpUserId(parsedJson.ampUserId);
+    const consentState: undefined|boolean = getConsentState(parsedJson.consentState);
+    const consentStateValue: undefined|string =
         getConsentStateValue(parsedJson.consentStateValue);
 
-    if (consentInstanceId && ampUserId && consentState && consentStateValue) {
+    if (consentInstanceId && ampUserId && consentState !== undefined && consentStateValue) {
       return {
         consentInstanceId,
         ampUserId,
