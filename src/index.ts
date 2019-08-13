@@ -112,7 +112,7 @@ const handler: APIGatewayProxyHandler =
     (event: APIGatewayProxyEvent, context: Context,
      callback: APIGatewayProxyCallback) => {
       if (STREAM_NAME) {
-        if (event.path === '/amp') {
+        if (event.path === '/report/amp') {
           return handleAmp(event, context, callback, STREAM_NAME);
         } else {
           // make consent record
