@@ -3,6 +3,7 @@ import { _ } from './amp';
 import { parseJson } from './model';
 import { ConsentString } from 'consent-string';
 import VENDOR_LIST from './resources/vendorlist.json';
+import fc from 'fast-check';
 
 const {
     ALL_ALLOWED_PURPOSES,
@@ -10,6 +11,7 @@ const {
     noConsent,
     consentStringFromAmpConsent,
     consentModelFrom,
+    getAmpConsentBody
 } = _;
 
 const oneToTwentyFour = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
@@ -234,4 +236,53 @@ describe('consentModelFrom', () => {
         const noConsent = consentModelFrom('abc', false);
         expect(parseJson(JSON.stringify(noConsent))).toEqual(noConsent);
     })
+});
+
+describe('getAmpConsentBody', () => {
+    const validBody: any = {
+        consentInstanceId: "adconsent",
+        ampUserId: "amp-nAH1sW6gGTVwm1PKfHmznA",
+        consentState: true,
+        consentStateValue: "accepted"
+    };
+
+    test('Should return the amp body when it is invalid', () => {
+        expect(getAmpConsentBody(JSON.stringify(validBody))).toEqual(validBody);
+    });
+
+    test('Should return undefined for any missing fields', () => {
+        Object.keys(validBody).forEach(key => {
+            const invalidBody = Object.assign({}, validBody, {[key]: undefined});
+            // Stringify will remove any keys with a value of undefined
+            expect(getAmpConsentBody(JSON.stringify(invalidBody))).toEqual(undefined);
+        });
+    });
+
+    test('Should return undefined for any wrong field types that are expecting a string', () => {
+        const nonStringType: fc.Arbitrary<any> = fc.anything().filter(
+            anyValue => typeof anyValue !== 'string'
+        );
+
+        ['consentInstanceId', 'ampUserId', 'consentStateValue'].forEach(key => {
+            fc.assert(
+                fc.property(nonStringType, (randomType: any) => {
+                    const invalidBody = Object.assign({}, validBody, {[key]: randomType});
+                    expect(getAmpConsentBody(JSON.stringify(invalidBody))).toEqual(undefined);
+                })
+            );
+        });
+    });
+
+    test('Should return undefined for any wrong field types that are expecting a string', () => {
+        const nonStringType: fc.Arbitrary<any> = fc.anything().filter(
+            anyValue => typeof anyValue !== 'boolean'
+        );
+
+        fc.assert(
+            fc.property(nonStringType, (randomType: any) => {
+                const invalidBody = Object.assign({}, validBody, {consentState: randomType});
+                expect(getAmpConsentBody(JSON.stringify(invalidBody))).toEqual(undefined);
+            })
+        );
+    });
 });

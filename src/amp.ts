@@ -42,8 +42,55 @@ const consentModelFrom = (ampUserId: string, ampConsent: boolean): CMPCookie => 
     },
 });
 
+type AmpConsentBody = {
+    consentInstanceId: string,
+    ampUserId: string,
+    consentState: boolean,
+    consentStateValue: string,
+};
+
+const getConsentInstanceId = (consentInstanceId: string): undefined | string => 
+    typeof consentInstanceId === 'string' && consentInstanceId ? consentInstanceId : undefined;
+
+const getAmpUserId = (ampUserId: string): undefined | string =>
+    typeof ampUserId === 'string' && ampUserId ? ampUserId : undefined;
+
+const getConsentState = (consentState: boolean): undefined | boolean =>
+    typeof consentState === 'boolean' && consentState ? consentState : undefined;
+
+const getConsentStateValue = (consentStateValue: string): undefined | string =>
+    typeof consentStateValue === 'string' && consentStateValue ? consentStateValue : undefined;
+
+
+const getAmpConsentBody = (body: string): undefined | AmpConsentBody => {
+    try {
+        const parsedJson: any = JSON.parse(body);
+
+        const consentInstanceId = getConsentInstanceId(parsedJson.consentInstanceId);
+        const ampUserId = getAmpUserId(parsedJson.ampUserId);
+        const consentState = getConsentState(parsedJson.consentState);
+        const consentStateValue = getConsentStateValue(parsedJson.consentStateValue);
+
+        if (consentInstanceId && ampUserId && consentState && consentStateValue) {
+            return {
+                consentInstanceId: consentInstanceId,
+                ampUserId: ampUserId,
+                consentState: consentState,
+                consentStateValue: consentStateValue,
+            };
+        }
+
+        console.log(`Error validating AMP body ${body}`);
+        return undefined;
+    } catch(e) {
+        console.log(`Error validating AMP body ${e} ${body}`);
+        return undefined;
+    }
+}
+
 export {
-    consentStringFromAmpConsent
+    consentStringFromAmpConsent,
+    getAmpConsentBody,
 };
 
 export let _ = {
@@ -51,5 +98,6 @@ export let _ = {
     fullConsent,
     noConsent,
     consentStringFromAmpConsent,
-    consentModelFrom
+    consentModelFrom,
+    getAmpConsentBody
 };
