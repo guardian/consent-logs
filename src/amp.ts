@@ -92,8 +92,6 @@ const getAmpConsentBody = (body: string): undefined|AmpConsentBody => {
         consentStateValue,
       };
     }
-
-    console.log(`Error validating AMP body ${body}`);
     return undefined;
   } catch (e) {
     console.log(`Error validating AMP body ${e} ${body}`);

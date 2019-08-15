@@ -97,6 +97,7 @@ const handleAmp =
               ampConsentBody.ampUserId, ampConsentBody.consentState);
           putConsentToFirehose(cmpCookie, callback, streamName);
         } else {
+          console.log(`Error validating AMP body ${event.body}`);
           callback(
               'Body for AMP consent request seems to be invalid',
               bad('Body for AMP consent request seems to be invalid'));
