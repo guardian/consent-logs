@@ -132,8 +132,16 @@ Resources:
         BufferingHints:
           IntervalInSeconds: '60'
           SizeInMBs: '128'
-        CompressionFormat: UNCOMPRESSED
-        Prefix: consent-logs/
+        CompressionFormat: GZIP
+        # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-kinesisfirehose-deliverystream.html
+        Prefix: !Join
+          - ''
+          - - consent-logs
+            - '/data/date=!{timestamp:YYYY}-!{timestamp:MM}-!{timestamp:dd}/'
+        ErrorOutputPrefix: !Join
+          - ''
+          - - consent-logs
+            - '/error/!{firehose:error-output-type}/date=!{timestamp:YYYY}-!{timestamp:MM}-!{timestamp:dd}/'
         RoleARN: !GetAtt DeliveryRole.Arn
   
   DeliveryRole:
