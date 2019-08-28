@@ -22,7 +22,7 @@ describe('parseJson', () => {
     version: '1',
     time: 123,
     source: 'www',
-    purposes: [],
+    purposes: {},
     browserId: 'abc123'
   };
 
@@ -283,14 +283,14 @@ describe('isValidPurposeType', () => {
 describe('isValidConsentString', () => {
   // Consent string tool
   // http://gdpr-demo.labs.quantcast.com/user-examples/cookie-workshop.html
-  test('Should accept consent strings', () => {
+  test('Should accept IAB consent strings', () => {
     const validConsentStrings = ['BOkhG-BOkhG-BAAABAENAAAAAAAAoAA'];
     validConsentStrings.forEach(
         consentString =>
             expect(isValidConsentString(consentString)).toBe(true));
   });
 
-  test('Should not accept random strings', () => {
+  test('Should not accept random IAB consent strings', () => {
     fc.assert(fc.property(
         fc.unicodeString(),
         (randomUnicodeString: string) =>
