@@ -4,6 +4,7 @@ enum PurposeType {
   'essential',
   'performance',
   'functionality',
+  'presonalisedAdvertising'
 }
 // See:
 // https://www.typescriptlang.org/docs/handbook/enums.html#enums-at-compile-time

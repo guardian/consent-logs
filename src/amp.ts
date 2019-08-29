@@ -44,6 +44,7 @@ const consentModelFrom = (ampUserId: string, ampConsent: boolean): CMPCookie =>
         'essential': ampConsent,
         'performance': ampConsent,
         'functionality': ampConsent,
+        'presonalisedAdvertising': ampConsent,
       },
     });
 

@@ -21,7 +21,7 @@ const oneToTwentyFour = [
   13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24
 ];
 
-describe('All allowed purposes', () => {
+describe('All allowed IAB purposes', () => {
   test('Should always be equal to array of 1 to 24', () => {
     expect(ALL_ALLOWED_PURPOSES).toEqual(oneToTwentyFour);
   });
@@ -240,14 +240,84 @@ describe('fullAmpConsent', () => {
 });
 
 describe('consentModelFrom', () => {
-  test('Should validate for a true consent', () => {
-    const fullConsent = consentModelFrom('abc', true);
-    expect(parseJson(JSON.stringify(fullConsent))).toEqual(fullConsent);
+  describe('full consent', () => {
+    test('Generated consent object is valid', () => {
+      const consentObject = consentModelFrom('abc', true);
+      const iabConsent = new ConsentString(consentObject.iab);
+      // expect that checks IAB consent string is correct
+    });
+
+    test('creates a fully consented IAB string', () => {
+      const fullConsent = consentModelFrom('abc', true);
+      expect(parseJson(JSON.stringify(fullConsent))).toEqual(fullConsent);
+    });
+
+    test('creates a fully consented IAB string', () => {
+      const fullConsent = consentModelFrom('abc', true);
+      expect(parseJson(JSON.stringify(fullConsent))).toEqual(fullConsent);
+    });
+
+    describe('PECR purposes', () => {
+      test('should set essential to true', () => {
+        const consentObject = consentModelFrom('abc', true);
+        expect(consentObject.purposes.essential).toEqual(true);
+      });
+
+      test('should set performance to true', () => {
+        const consentObject = consentModelFrom('abc', true);
+        expect(consentObject.purposes.performance).toEqual(true);
+      });
+
+      test('should set functionality to true', () => {
+        const consentObject = consentModelFrom('abc', true);
+        expect(consentObject.purposes.functionality).toEqual(true);
+      });
+
+      test('should set presonalisedAdvertising to true', () => {
+        const consentObject = consentModelFrom('abc', true);
+        expect(consentObject.purposes.presonalisedAdvertising).toEqual(true);
+      });
+    });
   });
 
-  test('Should validate for a false consent', () => {
-    const noConsent = consentModelFrom('abc', false);
-    expect(parseJson(JSON.stringify(noConsent))).toEqual(noConsent);
+
+  describe('without consent', () => {
+    test('Generated consent object is valid', () => {
+      const noConsent = consentModelFrom('abc', false);
+      expect(parseJson(JSON.stringify(noConsent))).toEqual(noConsent);
+    });
+
+    test('creates a fully consented IAB string', () => {
+      const fullConsent = consentModelFrom('abc', false);
+      expect(parseJson(JSON.stringify(fullConsent))).toEqual(fullConsent);
+    });
+
+    test('uses the provided amp user ID as the browser ID', () => {
+      const consentObject = consentModelFrom('abc', false);
+      expect(consentObject.browserId).toEqual('abc');
+    });
+
+    describe('PECR purposes', () => {
+      test('should set essential to false', () => {
+        const consentObject = consentModelFrom('abc', false);
+        expect(consentObject.purposes.essential).toEqual(false);
+      });
+
+      test('should set performance to false', () => {
+        const consentObject = consentModelFrom('abc', false);
+        expect(consentObject.purposes.performance).toEqual(false);
+      });
+
+      test('should set functionality to false', () => {
+        const consentObject = consentModelFrom('abc', false);
+        expect(consentObject.purposes.functionality).toEqual(false);
+      });
+
+      test('should set presonalisedAdvertising to false', () => {
+        const consentObject = consentModelFrom('abc', false);
+        expect(consentObject.purposes.presonalisedAdvertising).toEqual(false);
+      });
+    });
   });
 });
 
