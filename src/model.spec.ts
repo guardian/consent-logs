@@ -22,7 +22,12 @@ describe('parseJson', () => {
     version: '1',
     time: 123,
     source: 'www',
-    purposes: {},
+    purposes: {
+      'essential': false,
+      'performance': false,
+      'functionality': false,
+      'presonalisedAdvertising': false
+    },
     browserId: 'abc123'
   };
 
@@ -140,22 +145,13 @@ describe('parseJson', () => {
   });
 
   describe('purposes key', () => {
-    test('Should accept an empty object', () => {
+    test('Should reject an empty object', () => {
       const newValidObject = Object.assign({}, validObject, {purposes: {}});
-      expect(parseJson(JSON.stringify(newValidObject)))
-          .toMatchObject(newValidObject);
+      expect(parseJson(JSON.stringify(newValidObject))).toBeFalsy();
     });
 
     test('Should accept valid purposes', () => {
-      const validPurposeGen = fc.constantFrom(...purposeTypes);
-      fc.assert(fc.property(
-          validPurposeGen, fc.boolean(),
-          (validPurpose: string, randomBoolean: boolean) => {
-            const validObjectWithPurposes = Object.assign(
-                {}, validObject, {purposes: {[validPurpose]: randomBoolean}});
-            expect(parseJson(JSON.stringify(validObjectWithPurposes)))
-                .toMatchObject(validObjectWithPurposes);
-          }));
+      expect(parseJson(JSON.stringify(validObject))).toEqual(validObject);
     });
 
     test('Should reject invalid purposes keys', () => {
@@ -192,6 +188,19 @@ describe('parseJson', () => {
                 {}, validObject, {purposes: {[validPurposeKey]: invalidType}});
             expect(parseJson(JSON.stringify(invalidObject))).toBeNull();
           }));
+    });
+
+    test('rejects submissions with missing PECR purposes', () => {
+      const removeProperty =
+          (propKey: any, {[propKey]: propValue, ...rest}: any) => rest;
+
+      purposeTypes.forEach((purposeKey) => {
+        const invalidPurposes =
+            removeProperty(purposeKey, validObject.purposes);
+        const invalidObject =
+            Object.assign({}, validObject, {purposes: invalidPurposes});
+        expect(parseJson(JSON.stringify(invalidObject))).toBeNull();
+      });
     });
   });
 
@@ -299,15 +308,16 @@ describe('isValidConsentString', () => {
 });
 
 describe('isValidPurposes', () => {
+  const validPurposes = {
+    'essential': false,
+    'performance': false,
+    'functionality': false,
+    'presonalisedAdvertising': false
+  };
   const purposesArbitrary = fc.constantFrom(...purposeTypes);
 
-  test('Should accept valid purposes', () => {
-    const validPurposesListArbitrary = fc.object(new fc.ObjectConstraints(
-        purposesArbitrary, [fc.boolean()], 0, 5, false, false));
-
-    fc.assert(fc.property(
-        validPurposesListArbitrary,
-        (validPurposes) => isValidPurposes(validPurposes)));
+  test('accepts complete list of purposes', () => {
+    expect(isValidPurposes(validPurposes)).toBeTruthy();
   });
 
   test('Should not accept random strings in keys', () => {
@@ -319,6 +329,16 @@ describe('isValidPurposes', () => {
     fc.assert(fc.property(
         invalidKeysPurposesListArbitrary,
         (invalidPurposes) => !isValidPurposes(invalidPurposes)));
+  });
+
+  test('does not accept an object missing required purposes', () => {
+    const removeProperty =
+        (propKey: any, {[propKey]: propValue, ...rest}: any) => rest;
+
+    purposeTypes.forEach((purposeKey) => {
+      const invalidPurposes = removeProperty(purposeKey, validPurposes);
+      expect(parseJson(JSON.stringify(invalidPurposes))).toBeNull();
+    });
   });
 });
 

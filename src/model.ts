@@ -60,10 +60,16 @@ const isValidConsentString = (base64ConsentString: string): boolean => {
   }
 };
 
-const isValidPurposes = (purposeList: PurposeList): boolean =>
-    typeof purposeList === 'object' &&
-    Object.keys(purposeList).every(isValidPurposeType) &&
-    Object.values(purposeList).every(value => typeof value === 'boolean');
+const isValidPurposes = (purposeList: PurposeList): boolean => {
+  const keys = Object.keys(purposeList);
+  // correct type,
+  // all keys are valid purposes,
+  // all purposes are present,
+  // all keys are booleans
+  return typeof purposeList === 'object' && keys.every(isValidPurposeType) &&
+      purposeTypes.every((key) => keys.includes(key)) &&
+      Object.values(purposeList).every(value => typeof value === 'boolean');
+};
 
 const isValidBrowserId = (browserId: string): boolean => isNonEmpty(browserId);
 
