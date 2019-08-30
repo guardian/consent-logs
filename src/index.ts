@@ -3,14 +3,9 @@ import AWS from 'aws-sdk';
 import {provider} from 'aws-sdk/lib/credentials/credential_provider_chain';
 
 import {AmpConsentBody, consentModelFrom, getAmpConsentBody} from './amp';
-import {CMPCookie} from './model';
+import {CMPCookie, parseJson} from './model';
 
 const STREAM_NAME: string|undefined = process.env.STREAM_NAME;
-
-class ConsentRecord {
-  browserId!: string;
-  consentStr!: string;
-}
 
 function getCredentialProviderChain(): AWS.CredentialProviderChain {
   // Initiate provider chain like this,
@@ -48,6 +43,17 @@ function ok(message: string): APIGatewayProxyResult {
 function bad(message: string): APIGatewayProxyResult {
   return {
     statusCode: 400,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*'
+    },
+    body: JSON.stringify({response: message})
+  };
+}
+
+function notFound(message: string): APIGatewayProxyResult {
+  return {
+    statusCode: 404,
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*'
@@ -115,33 +121,23 @@ const handler: APIGatewayProxyHandler =
       if (STREAM_NAME) {
         if (event.path === '/report/amp') {
           return handleAmp(event, context, callback, STREAM_NAME);
-        } else {
+        } else if (event.path === '/report') {
           // make consent record
-          const consentRecord = new ConsentRecord();
           if (event.body != null) {
-            const bodyJson = JSON.parse(event.body);
-            consentRecord.browserId = bodyJson['browser_id'];
-            consentRecord.consentStr = bodyJson['consent_str'];
-
-            // put onto Kinesis firehose
-            fh.putRecord(
-                {
-                  DeliveryStreamName: STREAM_NAME,
-                  Record: {Data: new Buffer(JSON.stringify(consentRecord))}
-                },
-                (err, data) => {
-                  if (err) {
-                    console.log(err, err.stack);
-                  }  // an error occurred
-                  else {
-                    console.log(data);
-                  }  // successful response, remove later.
-                  callback(err, ok(data.RecordId));
-                });
-
+            const consentRecord = parseJson(event.body);
+            if (consentRecord != null) {
+              putConsentToFirehose(consentRecord, callback, STREAM_NAME);
+            } else {
+              console.log(`Error validating request body ${event.body}`);
+              callback(
+                  'Body for consent request seems to be invalid',
+                  bad('Body for consent request seems to be invalid'));
+            }
           } else {
             callback('Missing params', bad('Missing required parameters'));
           }
+        } else {
+          callback('Not found', notFound('Not found'));
         }
       } else {
         callback(
