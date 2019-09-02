@@ -23,14 +23,18 @@ function collectCmpErrors4<A, B, C, D>(
   }
 }
 
-function collectCmpErrors<T>(values: Array<CmpError|T>): CmpError|T[] {
-  if (values.some(isCmpError)) {
-    const combinedMessage = values.filter(isCmpError).map((err) => err.message).join(', ');
-    return cmpError(combinedMessage);
+function collectCmpErrors6<A, B, C, D, E, F>(
+    a: CmpError|A, b: CmpError|B, c: CmpError|C, d: CmpError|D, e: CmpError|E,
+    f: CmpError|F): CmpError|[A, B, C, D, E, F] {
+  if (isCmpError(a) || isCmpError(b) || isCmpError(c) || isCmpError(d) ||
+      isCmpError(e) || isCmpError(f)) {
+    const combinedError =
+        [a, b, c, d].filter(isCmpError).map((err) => err.message).join(', ');
+    return cmpError(combinedError);
   } else {
-    // no errors exist, so we know that this is `T[]`
-    return values as T[];
+    // no errors exist so we know that this is `[A, B, C, D]`
+    return [a as A, b as B, c as C, d as D, e as E, f as F];
   }
 }
 
-export {cmpError, CmpError, isCmpError, collectCmpErrors, collectCmpErrors4};
+export {cmpError, CmpError, isCmpError, collectCmpErrors6, collectCmpErrors4};

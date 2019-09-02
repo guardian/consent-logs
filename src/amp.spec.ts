@@ -4,8 +4,8 @@ import fc from 'fast-check';
 import {advanceTo, clear} from 'jest-date-mock';
 
 import {_} from './amp';
-import {parseJson} from './model';
 import {isCmpError} from './errors';
+import {parseJson} from './model';
 import VENDOR_LIST from './resources/vendorlist.json';
 
 const {
