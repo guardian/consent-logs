@@ -5,6 +5,7 @@ import {advanceTo, clear} from 'jest-date-mock';
 
 import {_} from './amp';
 import {parseJson} from './model';
+import {isCmpError} from './errors';
 import VENDOR_LIST from './resources/vendorlist.json';
 
 const {
@@ -337,7 +338,8 @@ describe('getAmpConsentBody', () => {
     Object.keys(validBody).forEach(key => {
       const invalidBody = Object.assign({}, validBody, {[key]: undefined});
       // Stringify will remove any keys with a value of undefined
-      expect(getAmpConsentBody(JSON.stringify(invalidBody))).toEqual(undefined);
+      expect(isCmpError(getAmpConsentBody(JSON.stringify(invalidBody))))
+          .toBeTruthy();
     });
   });
 
@@ -351,8 +353,8 @@ describe('getAmpConsentBody', () => {
           fc.assert(fc.property(nonStringType, (randomType: any) => {
             const invalidBody =
                 Object.assign({}, validBody, {[key]: randomType});
-            expect(getAmpConsentBody(JSON.stringify(invalidBody)))
-                .toEqual(undefined);
+            expect(isCmpError(getAmpConsentBody(JSON.stringify(invalidBody))))
+                .toBeTruthy();
           }));
         });
       });
@@ -366,8 +368,8 @@ describe('getAmpConsentBody', () => {
         fc.assert(fc.property(nonStringType, (randomType: any) => {
           const invalidBody =
               Object.assign({}, validBody, {consentState: randomType});
-          expect(getAmpConsentBody(JSON.stringify(invalidBody)))
-              .toEqual(undefined);
+          expect(isCmpError(getAmpConsentBody(JSON.stringify(invalidBody))))
+              .toBeTruthy();
         }));
       });
 });

@@ -1,4 +1,5 @@
 import {ConsentString} from 'consent-string';
+import {CmpError, cmpError} from './errors';
 
 enum PurposeType {
   'essential',
@@ -79,7 +80,7 @@ const isValidVersion = (version: string): boolean =>
 const isValidTime = (time: number): boolean =>
     typeof time === 'number' && isNumber(time);
 
-const validateObject = (jsonObject: object): boolean => {
+const validateObject = (jsonObject: object): CmpError|CMPCookie => {
   const keysToCheck = {
     'iab': isValidConsentString,
     'version': isValidVersion,
@@ -88,18 +89,21 @@ const validateObject = (jsonObject: object): boolean => {
     'purposes': isValidPurposes,
     'browserId': isValidBrowserId
   };
-  return Object
-      .keys(keysToCheck)
-      // @ts-ignore: This is where we need to convert between types
-      .every((key) => key in jsonObject && keysToCheck[key](jsonObject[key]));
+  const valid =
+      Object.keys(keysToCheck)
+          .every(
+              // @ts-ignore: This is where we need to convert between types
+              (key) => key in jsonObject && keysToCheck[key](jsonObject[key]));
+  return valid ? (jsonObject as CMPCookie) :
+                 cmpError('TODO, work out which key');
 };
 
-const parseJson = (json: string): CMPCookie|null => {
+const parseJson = (json: string): CmpError|CMPCookie => {
   try {
     const parsedJson: object = JSON.parse(json);
-    return validateObject(parsedJson) ? (parsedJson as CMPCookie) : null;
+    return validateObject(parsedJson);
   } catch (exception) {
-    return null;
+    return cmpError('Error parsing submission body');
   }
 };
 

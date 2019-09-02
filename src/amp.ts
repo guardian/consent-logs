@@ -1,5 +1,6 @@
 import {ConsentString} from 'consent-string';
 
+import {cmpError, CmpError, collectCmpErrors4, isCmpError} from './errors';
 import {CMPCookie} from './model';
 import VENDOR_LIST from './resources/vendorlist.json';
 
@@ -55,48 +56,55 @@ type AmpConsentBody = {
   consentStateValue: string,
 };
 
-const getConsentInstanceId = (consentInstanceId: string): undefined|string =>
+const getConsentInstanceId = (consentInstanceId: string): CmpError|string =>
     typeof consentInstanceId === 'string' && consentInstanceId ?
     consentInstanceId :
-    undefined;
+    cmpError('ConsentInstanceId should be a string');
 
-const getAmpUserId = (ampUserId: string): undefined|string =>
-    typeof ampUserId === 'string' && ampUserId ? ampUserId : undefined;
+const getAmpUserId = (ampUserId: string): CmpError|string =>
+    typeof ampUserId === 'string' && ampUserId ?
+    ampUserId :
+    cmpError('ampUserId should be a string');
 
-const getConsentState = (consentState: boolean): undefined|boolean =>
-    typeof consentState === 'boolean' ? consentState : undefined;
+const getConsentState = (consentState: boolean): CmpError|boolean =>
+    typeof consentState === 'boolean' ?
+    consentState :
+    cmpError('consentState should be a string');
 
-const getConsentStateValue = (consentStateValue: string): undefined|string =>
+const getConsentStateValue = (consentStateValue: string): CmpError|string =>
     typeof consentStateValue === 'string' && consentStateValue ?
     consentStateValue :
-    undefined;
+    cmpError('consentStateValue should be a string');
 
-
-const getAmpConsentBody = (body: string): undefined|AmpConsentBody => {
+const getAmpConsentBody = (body: string): CmpError|AmpConsentBody => {
   try {
     const parsedJson = JSON.parse(body);
 
-    const consentInstanceId: undefined|string =
+    const consentInstanceId: CmpError|string =
         getConsentInstanceId(parsedJson.consentInstanceId);
-    const ampUserId: undefined|string = getAmpUserId(parsedJson.ampUserId);
-    const consentState: undefined|boolean =
+    const ampUserId: CmpError|string = getAmpUserId(parsedJson.ampUserId);
+    const consentState: CmpError|boolean =
         getConsentState(parsedJson.consentState);
-    const consentStateValue: undefined|string =
+    const consentStateValue: CmpError|string =
         getConsentStateValue(parsedJson.consentStateValue);
 
-    if (consentInstanceId && ampUserId && consentState !== undefined &&
-        consentStateValue) {
+    const attempt = collectCmpErrors4(
+        consentInstanceId, ampUserId, consentState, consentStateValue);
+
+    if (isCmpError(attempt)) {
+      return attempt;
+    } else {
+      const [cII, aUI, cS, cSV] = attempt;
       return {
-        consentInstanceId,
-        ampUserId,
-        consentState,
-        consentStateValue,
+        consentInstanceId: cII,
+        ampUserId: aUI,
+        consentState: cS,
+        consentStateValue: cSV,
       };
     }
-    return undefined;
   } catch (e) {
     console.log(`Error validating AMP body ${e} ${body}`);
-    return undefined;
+    return cmpError('Error validating body');
   }
 };
 
