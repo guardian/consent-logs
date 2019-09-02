@@ -37,4 +37,22 @@ function collectCmpErrors6<A, B, C, D, E, F>(
   }
 }
 
-export {cmpError, CmpError, isCmpError, collectCmpErrors6, collectCmpErrors4};
+function collectCmpErrors<T>(values: Array<CmpError|T>): CmpError|T[] {
+  if (values.some(isCmpError)) {
+    const combinedMessage =
+        values.filter(isCmpError).map((err) => err.message).join(', ');
+    return cmpError(combinedMessage);
+  } else {
+    // no errors exist, so we know that this is `T[]`
+    return values as T[];
+  }
+}
+
+export {
+  cmpError,
+  CmpError,
+  isCmpError,
+  collectCmpErrors,
+  collectCmpErrors4,
+  collectCmpErrors6
+};

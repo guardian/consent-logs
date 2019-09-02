@@ -1,5 +1,5 @@
 import {ConsentString} from 'consent-string';
-import {CmpError, cmpError, collectCmpErrors6, isCmpError} from './errors';
+import {CmpError, cmpError, collectCmpErrors, collectCmpErrors6, isCmpError} from './errors';
 
 enum PurposeType {
   'essential',
@@ -59,11 +59,22 @@ const validateSourceType = (sourceType: any): SourceString|CmpError => {
 const validatePurposeType = (purposeType: any): string|CmpError => {
   if (typeof purposeType === 'string') {
     const valid = purposeTypes.includes(purposeType);
-    return valid ? purposeType : cmpError('invalid purposeType');
+    return valid ? purposeType :
+                   cmpError(`invalid purposeType, ${purposeType}`);
   } else {
-    return cmpError('expected string for purpose key');
+    return cmpError('purpose object keys must be strings');
   }
 };
+
+const validatePurposeValue =
+    /* tslint:disable-next-line:no-any */
+    (purposeValue: any, purposeKey: string): boolean|CmpError => {
+      if (typeof purposeValue === 'boolean') {
+        return purposeValue;
+      } else {
+        return cmpError(`expected boolean for purpose ${purposeKey}`);
+      }
+    };
 
 /* tslint:disable-next-line:no-any */
 const validateConsentString = (base64ConsentString: any): string|CmpError => {
@@ -85,18 +96,34 @@ const validateConsentString = (base64ConsentString: any): string|CmpError => {
   }
 };
 
-const validatePurposes = (purposeList: PurposeList): PurposeList|CmpError => {
-  const keys = Object.keys(purposeList);
-  // correct type,
-  // all keys are valid purposes,
-  // all purposes are present,
-  // all keys are booleans
-  const valid = typeof purposeList === 'object' &&
-      keys.every(validatePurposeType) &&
-      purposeTypes.every((key) => keys.includes(key)) &&
-      Object.values(purposeList).every(value => typeof value === 'boolean');
-  // TODO: specify which purpose(s) caused the problem
-  return valid ? purposeList : cmpError('invalid purpose(s)');
+/* tslint:disable-next-line:no-any */
+const validatePurposes = (purposeList: any): PurposeList|CmpError => {
+  if (typeof purposeList === 'object') {
+    const keys = Object.keys(purposeList);
+    const keysValidation = collectCmpErrors(keys.map(validatePurposeType));
+    if (isCmpError(keysValidation)) {
+      return keysValidation;
+    } else {
+      const allRequiredKeys =
+          purposeTypes.every((key) => keysValidation.includes(key));
+      if (allRequiredKeys) {
+        const checkValues =
+            Object.entries(purposeList)
+                .map(([key, value]) => validatePurposeValue(value, key));
+        const result = collectCmpErrors(checkValues);
+        if (isCmpError(result)) {
+          return result;
+        } else {
+          // all keys and values are valid, this is a PurposeList
+          return purposeList as PurposeList;
+        }
+      } else {
+        return cmpError('missing required purpose');
+      }
+    }
+  } else {
+    return cmpError('object expected for purposes');
+  }
 };
 
 /* tslint:disable-next-line:no-any */

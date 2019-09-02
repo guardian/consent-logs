@@ -1,7 +1,7 @@
 /* tslint:disable:no-any */
 import fc from 'fast-check';
 
-import {CmpError, cmpError, collectCmpErrors4, collectCmpErrors6, isCmpError} from './errors';
+import {CmpError, cmpError, collectCmpErrors, collectCmpErrors4, collectCmpErrors6, isCmpError} from './errors';
 
 describe('isCmpError', () => {
   test('returns true for a value that is a cmpError', () => {
@@ -178,6 +178,45 @@ describe('collectCmpErrors6', () => {
     const e: string[]|CmpError = ['foo', 'bar'];
     const f: boolean[]|CmpError = [true, false];
     const result = collectCmpErrors6(a, b, c, d, e, f);
+    if (isCmpError(result)) {
+      expect(result.message)
+          .toEqual('test error message, another error message');
+    } else {
+      fail('call should have returned a CmpError instance');
+    }
+  });
+});
+
+describe('collectCmpErrors', () => {
+  test('retuns the successful values if they all succeeded', () => {
+    const generator = fc.array(fc.integer());
+    fc.assert(fc.property(generator, (arr) => {
+      expect(collectCmpErrors(arr)).toEqual(arr);
+    }));
+  });
+
+  test('retuns a CmpError if one exists in the list', () => {
+    const result = collectCmpErrors([cmpError('error'), 1, 2, 3, 4]);
+    expect(isCmpError(result)).toBeTruthy();
+  });
+
+  test('retuns a CmpError if one exists in the list', () => {
+    const result = collectCmpErrors([1, 2, cmpError('error'), 3, 4]);
+    expect(isCmpError(result)).toBeTruthy();
+  });
+
+  test('takes the overall CmpError message from a single error', () => {
+    const result = collectCmpErrors([cmpError('test error message'), 1]);
+    if (isCmpError(result)) {
+      expect(result.message).toEqual('test error message');
+    } else {
+      fail('call should have returned a CmpError instance');
+    }
+  });
+
+  test('takes the overall CmpError message from a single error', () => {
+    const result = collectCmpErrors(
+        [cmpError('test error message'), cmpError('another error message'), 1]);
     if (isCmpError(result)) {
       expect(result.message)
           .toEqual('test error message, another error message');

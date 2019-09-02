@@ -275,7 +275,7 @@ describe('isNonEmpty', () => {
   });
 });
 
-describe('isValidSourceType', () => {
+describe('validateSourceType', () => {
   test('should only allow valid source types', () => {
     expect(isCmpError(sourceTypes.every(validateSourceType))).toBeFalsy();
   });
@@ -292,7 +292,7 @@ describe('isValidSourceType', () => {
   });
 });
 
-describe('isValidPurposeType', () => {
+describe('validatePurposeType', () => {
   test('should only allow valid purpose types', () => {
     expect(purposeTypes.every(
                (purposeType) => isCmpError(validatePurposeType(purposeType))))
@@ -305,9 +305,13 @@ describe('isValidPurposeType', () => {
         (randomString: string) =>
             isCmpError(validatePurposeType(randomString))));
   });
+
+  test('should not accept an invalid type as its argument', () => {
+    expect(isCmpError(validatePurposeType(123))).toBeTruthy();
+  });
 });
 
-describe('isValidConsentString', () => {
+describe('validateConsentString', () => {
   // Consent string tool
   // http://gdpr-demo.labs.quantcast.com/user-examples/cookie-workshop.html
   test('Should accept IAB consent strings', () => {
@@ -324,9 +328,13 @@ describe('isValidConsentString', () => {
         (randomUnicodeString: string) =>
             isCmpError(validateConsentString(randomUnicodeString))));
   });
+
+  test('should not accept an invalid type as its argument', () => {
+    expect(isCmpError(validateConsentString(123))).toBeTruthy();
+  });
 });
 
-describe('isValidPurposes', () => {
+describe('validatePurposes', () => {
   const validPurposes = {
     'essential': false,
     'performance': false,
@@ -357,13 +365,23 @@ describe('isValidPurposes', () => {
 
     purposeTypes.forEach((purposeKey) => {
       const invalidPurposes = removeProperty(purposeKey, validPurposes);
-      expect(isCmpError(parseJson(JSON.stringify(invalidPurposes))))
-          .toBeTruthy();
+      expect(isCmpError(validatePurposes(invalidPurposes))).toBeTruthy();
     });
+  });
+
+  test('fails with a helpful message for purpose with wrong type', () => {
+    const invalidPurposes =
+        Object.assign({}, validPurposes, {'essential': 123});
+    const result = validatePurposes(invalidPurposes);
+    if (isCmpError(result)) {
+      expect(result.message).toContain('essential');
+    } else {
+      fail('call should have failed beacuse essential has the wrong type');
+    }
   });
 });
 
-describe('isValidBrowserId', () => {
+describe('validateBrowserId', () => {
   test('Should not accept an empty string', () => {
     expect(isCmpError(validateBrowserId(''))).toBeTruthy();
   });
