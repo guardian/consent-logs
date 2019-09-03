@@ -28,8 +28,10 @@ function collectCmpErrors6<A, B, C, D, E, F>(
     f: CmpError|F): CmpError|[A, B, C, D, E, F] {
   if (isCmpError(a) || isCmpError(b) || isCmpError(c) || isCmpError(d) ||
       isCmpError(e) || isCmpError(f)) {
-    const combinedError =
-        [a, b, c, d].filter(isCmpError).map((err) => err.message).join(', ');
+    const combinedError = [a, b, c, d, e, f]
+                              .filter(isCmpError)
+                              .map((err) => err.message)
+                              .join(', ');
     return cmpError(combinedError);
   } else {
     // no errors exist so we know that this is `[A, B, C, D]`

@@ -1,17 +1,36 @@
 /* tslint:disable:no-any */
 import fc from 'fast-check';
+import prettyFormat from 'pretty-format';
 
+import {addCmpExtensions} from './cmpErrorTestExtensions';
 import {CmpError, cmpError, collectCmpErrors, collectCmpErrors4, collectCmpErrors6, isCmpError} from './errors';
+
+addCmpExtensions();
+
+describe('toBeCmpError matcher', () => {
+  test('succesfully matches a cmpError', () => {
+    const value: string|CmpError = cmpError('test error');
+    expect(value).toBeCmpError();
+  });
+
+  test.skip('should fail for a non-CmpError value', () => {
+    expect('abc').toBeCmpError();
+  });
+
+  test.skip('should fail for with an empty CmpError message', () => {
+    expect(cmpError('')).toBeCmpError();
+  });
+});
 
 describe('isCmpError', () => {
   test('returns true for a value that is a cmpError', () => {
     const value: string|CmpError = cmpError('test error');
-    expect(isCmpError(value)).toBeTruthy();
+    expect(isCmpError(value)).toBe(true);
   });
 
   test('returns false for a value that is not a CmpError', () => {
     const value: string|CmpError = 'not an error';
-    expect(isCmpError(value)).toBeFalsy();
+    expect(isCmpError(value)).toBe(false);
   });
 });
 
@@ -29,7 +48,7 @@ describe('collectCmpErrors4', () => {
     const b: number|CmpError = 1;
     const c: boolean|CmpError = false;
     const d: number[]|CmpError = [1, 2, 3];
-    expect(isCmpError(collectCmpErrors4(a, b, c, d))).toBeTruthy();
+    expect(collectCmpErrors4(a, b, c, d)).toBeCmpError();
   });
 
   test('retuns a CmpError if the second item is a failure', () => {
@@ -37,7 +56,7 @@ describe('collectCmpErrors4', () => {
     const b: number|CmpError = cmpError('second item failure');
     const c: boolean|CmpError = false;
     const d: number[]|CmpError = [1, 2, 3];
-    expect(isCmpError(collectCmpErrors4(a, b, c, d))).toBeTruthy();
+    expect(collectCmpErrors4(a, b, c, d)).toBeCmpError();
   });
 
   test('retuns a CmpError if the third item is a failure', () => {
@@ -45,7 +64,7 @@ describe('collectCmpErrors4', () => {
     const b: number|CmpError = 1;
     const c: boolean|CmpError = cmpError('third item failure');
     const d: number[]|CmpError = [1, 2, 3];
-    expect(isCmpError(collectCmpErrors4(a, b, c, d))).toBeTruthy();
+    expect(collectCmpErrors4(a, b, c, d)).toBeCmpError();
   });
 
   test('retuns a CmpError if the fourth item is a failure', () => {
@@ -53,7 +72,7 @@ describe('collectCmpErrors4', () => {
     const b: number|CmpError = 1;
     const c: boolean|CmpError = false;
     const d: number[]|CmpError = cmpError('fourth item failure');
-    expect(isCmpError(collectCmpErrors4(a, b, c, d))).toBeTruthy();
+    expect(collectCmpErrors4(a, b, c, d)).toBeCmpError();
   });
 
   test('returns the provided error message for a single failure', () => {
@@ -62,11 +81,7 @@ describe('collectCmpErrors4', () => {
     const c: boolean|CmpError = false;
     const d: number[]|CmpError = [1, 2, 3];
     const result = collectCmpErrors4(a, b, c, d);
-    if (isCmpError(result)) {
-      expect(result.message).toEqual('test error message');
-    } else {
-      fail('call should have returned a CmpError instance');
-    }
+    expect(result).toBeCmpErrorWithMessage('test error message');
   });
 
   test('returns concatenated error message for multiple failures', () => {
@@ -75,12 +90,8 @@ describe('collectCmpErrors4', () => {
     const c: boolean|CmpError = false;
     const d: number[]|CmpError = [1, 2, 3];
     const result = collectCmpErrors4(a, b, c, d);
-    if (isCmpError(result)) {
-      expect(result.message)
-          .toEqual('test error message, another error message');
-    } else {
-      fail('call should have returned a CmpError instance');
-    }
+    expect(result).toBeCmpErrorWithMessage(
+        'test error message, another error message');
   });
 });
 
@@ -102,7 +113,7 @@ describe('collectCmpErrors6', () => {
     const d: number[]|CmpError = [1, 2, 3];
     const e: string[]|CmpError = ['foo', 'bar'];
     const f: boolean[]|CmpError = [true, false];
-    expect(isCmpError(collectCmpErrors6(a, b, c, d, e, f))).toBeTruthy();
+    expect(collectCmpErrors6(a, b, c, d, e, f)).toBeCmpError();
   });
 
   test('retuns a CmpError if the second item is a failure', () => {
@@ -112,7 +123,7 @@ describe('collectCmpErrors6', () => {
     const d: number[]|CmpError = [1, 2, 3];
     const e: string[]|CmpError = ['foo', 'bar'];
     const f: boolean[]|CmpError = [true, false];
-    expect(isCmpError(collectCmpErrors6(a, b, c, d, e, f))).toBeTruthy();
+    expect(collectCmpErrors6(a, b, c, d, e, f)).toBeCmpError();
   });
 
   test('retuns a CmpError if the third item is a failure', () => {
@@ -122,7 +133,7 @@ describe('collectCmpErrors6', () => {
     const d: number[]|CmpError = [1, 2, 3];
     const e: string[]|CmpError = ['foo', 'bar'];
     const f: boolean[]|CmpError = [true, false];
-    expect(isCmpError(collectCmpErrors6(a, b, c, d, e, f))).toBeTruthy();
+    expect(collectCmpErrors6(a, b, c, d, e, f)).toBeCmpError();
   });
 
   test('retuns a CmpError if the fourth item is a failure', () => {
@@ -132,7 +143,7 @@ describe('collectCmpErrors6', () => {
     const d: number[]|CmpError = cmpError('fourth item failure');
     const e: string[]|CmpError = ['foo', 'bar'];
     const f: boolean[]|CmpError = [true, false];
-    expect(isCmpError(collectCmpErrors6(a, b, c, d, e, f))).toBeTruthy();
+    expect(collectCmpErrors6(a, b, c, d, e, f)).toBeCmpError();
   });
 
   test('retuns a CmpError if the fifth item is a failure', () => {
@@ -142,7 +153,7 @@ describe('collectCmpErrors6', () => {
     const d: number[]|CmpError = [1, 2, 3];
     const e: string[]|CmpError = cmpError('fifth item failure');
     const f: boolean[]|CmpError = [true, false];
-    expect(isCmpError(collectCmpErrors6(a, b, c, d, e, f))).toBeTruthy();
+    expect(collectCmpErrors6(a, b, c, d, e, f)).toBeCmpError();
   });
 
   test('retuns a CmpError if the sixth item is a failure', () => {
@@ -152,7 +163,7 @@ describe('collectCmpErrors6', () => {
     const d: number[]|CmpError = [1, 2, 3];
     const e: string[]|CmpError = ['foo', 'bar'];
     const f: boolean[]|CmpError = cmpError('sixth item failure');
-    expect(isCmpError(collectCmpErrors6(a, b, c, d, e, f))).toBeTruthy();
+    expect(collectCmpErrors6(a, b, c, d, e, f)).toBeCmpError();
   });
 
   test('returns the provided error message for a single failure', () => {
@@ -163,11 +174,7 @@ describe('collectCmpErrors6', () => {
     const e: string[]|CmpError = ['foo', 'bar'];
     const f: boolean[]|CmpError = [true, false];
     const result = collectCmpErrors6(a, b, c, d, e, f);
-    if (isCmpError(result)) {
-      expect(result.message).toEqual('test error message');
-    } else {
-      fail('call should have returned a CmpError instance');
-    }
+    expect(result).toBeCmpErrorWithMessage('test error message');
   });
 
   test('returns concatenated error message for multiple failures', () => {
@@ -178,12 +185,8 @@ describe('collectCmpErrors6', () => {
     const e: string[]|CmpError = ['foo', 'bar'];
     const f: boolean[]|CmpError = [true, false];
     const result = collectCmpErrors6(a, b, c, d, e, f);
-    if (isCmpError(result)) {
-      expect(result.message)
-          .toEqual('test error message, another error message');
-    } else {
-      fail('call should have returned a CmpError instance');
-    }
+    expect(result).toBeCmpErrorWithMessage(
+        'test error message, another error message');
   });
 });
 
@@ -197,31 +200,23 @@ describe('collectCmpErrors', () => {
 
   test('retuns a CmpError if one exists in the list', () => {
     const result = collectCmpErrors([cmpError('error'), 1, 2, 3, 4]);
-    expect(isCmpError(result)).toBeTruthy();
+    expect(result).toBeCmpError();
   });
 
   test('retuns a CmpError if one exists in the list', () => {
     const result = collectCmpErrors([1, 2, cmpError('error'), 3, 4]);
-    expect(isCmpError(result)).toBeTruthy();
+    expect(result).toBeCmpError();
   });
 
   test('takes the overall CmpError message from a single error', () => {
     const result = collectCmpErrors([cmpError('test error message'), 1]);
-    if (isCmpError(result)) {
-      expect(result.message).toEqual('test error message');
-    } else {
-      fail('call should have returned a CmpError instance');
-    }
+    expect(result).toBeCmpErrorWithMessage('test error message');
   });
 
   test('takes the overall CmpError message from a single error', () => {
     const result = collectCmpErrors(
         [cmpError('test error message'), cmpError('another error message'), 1]);
-    if (isCmpError(result)) {
-      expect(result.message)
-          .toEqual('test error message, another error message');
-    } else {
-      fail('call should have returned a CmpError instance');
-    }
+    expect(result).toBeCmpErrorWithMessage(
+        'test error message, another error message');
   });
 });
