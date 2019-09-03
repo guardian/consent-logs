@@ -277,9 +277,9 @@ describe('consentModelFrom', () => {
         expect(consentObject.purposes.functionality).toEqual(true);
       });
 
-      test('should set presonalisedAdvertising to true', () => {
+      test('should set personalisedAdvertising to true', () => {
         const consentObject = consentModelFrom('abc', true);
-        expect(consentObject.purposes.presonalisedAdvertising).toEqual(true);
+        expect(consentObject.purposes.personalisedAdvertising).toEqual(true);
       });
     });
   });
@@ -317,9 +317,9 @@ describe('consentModelFrom', () => {
         expect(consentObject.purposes.functionality).toEqual(false);
       });
 
-      test('should set presonalisedAdvertising to false', () => {
+      test('should set personalisedAdvertising to false', () => {
         const consentObject = consentModelFrom('abc', false);
-        expect(consentObject.purposes.presonalisedAdvertising).toEqual(false);
+        expect(consentObject.purposes.personalisedAdvertising).toEqual(false);
       });
     });
   });

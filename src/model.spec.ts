@@ -30,7 +30,7 @@ describe('parseJson', () => {
       'essential': false,
       'performance': false,
       'functionality': false,
-      'presonalisedAdvertising': false
+      'personalisedAdvertising': false
     },
     browserId: 'abc123'
   };
@@ -326,7 +326,7 @@ describe('validatePurposes', () => {
     'essential': false,
     'performance': false,
     'functionality': false,
-    'presonalisedAdvertising': false
+    'personalisedAdvertising': false
   };
   const purposesArbitrary = fc.constantFrom(...purposeTypes);
 
