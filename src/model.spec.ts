@@ -2,15 +2,19 @@
 /* tslint:disable:no-any */
 import fc from 'fast-check';
 
+import {addCmpExtensions} from './cmpErrorTestExtensions';
+import {isCmpError} from './errors';
 import {_, parseJson} from './model';
+
+addCmpExtensions();
 
 const {
   isNumber,
-  isValidSourceType,
-  isValidPurposeType,
-  isValidConsentString,
-  isValidPurposes,
-  isValidBrowserId,
+  validateSourceType,
+  validatePurposeType,
+  validateConsentString,
+  validatePurposes,
+  validateBrowserId,
   sourceTypes,
   purposeTypes,
   isNonEmpty
@@ -26,17 +30,17 @@ describe('parseJson', () => {
       'essential': false,
       'performance': false,
       'functionality': false,
-      'presonalisedAdvertising': false
+      'personalisedAdvertising': false
     },
     browserId: 'abc123'
   };
 
   test('Should not parse an empty string', () => {
-    expect(parseJson('')).toBeNull();
+    expect(parseJson('')).toBeCmpError();
   });
 
   test('Should not parse an empty object in a string', () => {
-    expect(parseJson('{}')).toBeNull();
+    expect(parseJson('{}')).toBeCmpError();
   });
 
   test('Should parse an object with all keys', () => {
@@ -44,8 +48,9 @@ describe('parseJson', () => {
   });
 
   test('Should reject random objects', () => {
-    fc.assert(
-        fc.property(fc.json(), (jsonString: string) => !parseJson(jsonString)));
+    fc.assert(fc.property(fc.json(), (jsonString: string) => {
+      expect(parseJson(jsonString)).toBeCmpError();
+    }));
   });
 
   describe('iab key', () => {
@@ -55,7 +60,7 @@ describe('parseJson', () => {
       fc.assert(fc.property(invalidType, (invalidType: any) => {
         const invalidObject =
             Object.assign({}, validObject, {iab: invalidType});
-        expect(parseJson(JSON.stringify(invalidObject))).toBeNull();
+        expect(parseJson(JSON.stringify(invalidObject))).toBeCmpError();
       }));
     });
   });
@@ -77,7 +82,7 @@ describe('parseJson', () => {
       fc.assert(fc.property(invalidVersions, (invalidVersion: string) => {
         const invalidObject =
             Object.assign({}, validObject, {version: invalidVersion});
-        expect(parseJson(JSON.stringify(invalidObject))).toBeNull();
+        expect(parseJson(JSON.stringify(invalidObject))).toBeCmpError();
       }));
     });
 
@@ -87,7 +92,7 @@ describe('parseJson', () => {
       fc.assert(fc.property(invalidType, (invalidType: any) => {
         const invalidObject =
             Object.assign({}, validObject, {version: invalidType});
-        expect(parseJson(JSON.stringify(invalidObject))).toBeNull();
+        expect(parseJson(JSON.stringify(invalidObject))).toBeCmpError();
       }));
     });
   });
@@ -108,7 +113,7 @@ describe('parseJson', () => {
       fc.assert(fc.property(invalidType, (invalidType: any) => {
         const invalidObject =
             Object.assign({}, validObject, {time: invalidType});
-        expect(parseJson(JSON.stringify(invalidObject))).toBeNull();
+        expect(parseJson(JSON.stringify(invalidObject))).toBeCmpError();
       }));
     });
   });
@@ -129,7 +134,7 @@ describe('parseJson', () => {
       fc.assert(fc.property(invalidSourceTypes, (invalidSourceType: string) => {
         const invalidObject =
             Object.assign({}, validObject, {source: invalidSourceType});
-        expect(parseJson(JSON.stringify(invalidObject))).toBeNull();
+        expect(parseJson(JSON.stringify(invalidObject))).toBeCmpError();
       }));
     });
 
@@ -139,15 +144,15 @@ describe('parseJson', () => {
       fc.assert(fc.property(invalidType, (invalidType: any) => {
         const invalidObject =
             Object.assign({}, validObject, {source: invalidType});
-        expect(parseJson(JSON.stringify(invalidObject))).toBeNull();
+        expect(parseJson(JSON.stringify(invalidObject))).toBeCmpError();
       }));
     });
   });
 
   describe('purposes key', () => {
-    test('Should reject an empty object', () => {
+    test('Should reject an empty purposes object', () => {
       const newValidObject = Object.assign({}, validObject, {purposes: {}});
-      expect(parseJson(JSON.stringify(newValidObject))).toBeFalsy();
+      expect(parseJson(JSON.stringify(newValidObject))).toBeCmpError();
     });
 
     test('Should accept valid purposes', () => {
@@ -162,7 +167,7 @@ describe('parseJson', () => {
           (invalidPurpose: string, randomBoolean: boolean) => {
             const invalidObject = Object.assign(
                 {}, validObject, {purposes: {invalidPurpose: randomBoolean}});
-            expect(parseJson(JSON.stringify(invalidObject))).toBeNull();
+            expect(parseJson(JSON.stringify(invalidObject))).toBeCmpError();
           }));
     });
 
@@ -172,7 +177,7 @@ describe('parseJson', () => {
       fc.assert(fc.property(invalidType, (invalidType: any) => {
         const invalidObject =
             Object.assign({}, validObject, {purposes: invalidType});
-        expect(parseJson(JSON.stringify(invalidObject))).toBeNull();
+        expect(parseJson(JSON.stringify(invalidObject))).toBeCmpError();
       }));
     });
 
@@ -186,7 +191,7 @@ describe('parseJson', () => {
           (validPurposeKey: string, invalidType: any) => {
             const invalidObject = Object.assign(
                 {}, validObject, {purposes: {[validPurposeKey]: invalidType}});
-            expect(parseJson(JSON.stringify(invalidObject))).toBeNull();
+            expect(parseJson(JSON.stringify(invalidObject))).toBeCmpError();
           }));
     });
 
@@ -199,7 +204,7 @@ describe('parseJson', () => {
             removeProperty(purposeKey, validObject.purposes);
         const invalidObject =
             Object.assign({}, validObject, {purposes: invalidPurposes});
-        expect(parseJson(JSON.stringify(invalidObject))).toBeNull();
+        expect(parseJson(JSON.stringify(invalidObject))).toBeCmpError();
       });
     });
   });
@@ -207,7 +212,7 @@ describe('parseJson', () => {
   describe('browserId key', () => {
     test('Should not acccept an empty string', () => {
       const newInvalidObject = Object.assign({}, validObject, {browserId: ''});
-      expect(parseJson(JSON.stringify(newInvalidObject))).toBeNull();
+      expect(parseJson(JSON.stringify(newInvalidObject))).toBeCmpError();
     });
     test('Should accept any non-empty string', () => {
       const nonEmptyString = fc.string(1, 40).filter(s => s.trim().length > 0);
@@ -225,7 +230,7 @@ describe('parseJson', () => {
       fc.assert(fc.property(invalidType, (invalidType: any) => {
         const invalidObject =
             Object.assign({}, validObject, {browserId: invalidType});
-        expect(parseJson(JSON.stringify(invalidObject))).toBeNull();
+        expect(parseJson(JSON.stringify(invalidObject))).toBeCmpError();
       }));
     });
   });
@@ -261,63 +266,72 @@ describe('isNonEmpty', () => {
   });
 });
 
-describe('isValidSourceType', () => {
+describe('validateSourceType', () => {
   test('should only allow valid source types', () => {
-    expect(sourceTypes.every(isValidSourceType)).toBe(true);
+    expect(sourceTypes.every(validateSourceType)).toNotBeCmpError();
   });
 
   test('should not allow an empty string', () => {
-    expect(isValidSourceType('')).toBe(false);
+    expect(validateSourceType('')).toBeCmpError();
   });
 
   test('should not accept random strings', () => {
-    fc.assert(fc.property(
-        fc.string(),
-        (randomString: string) => !isValidSourceType(randomString)));
+    fc.assert(fc.property(fc.string(), (randomString: string) => {
+      expect(validateSourceType(randomString)).toBeCmpError();
+    }));
   });
 });
 
-describe('isValidPurposeType', () => {
+describe('validatePurposeType', () => {
   test('should only allow valid purpose types', () => {
-    expect(purposeTypes.every(isValidPurposeType)).toBe(true);
+    expect(
+        purposeTypes.every((purposeType) => validatePurposeType(purposeType)))
+        .toNotBeCmpError();
   });
 
   test('should not accept random strings', () => {
-    fc.assert(fc.property(
-        fc.string(),
-        (randomString: string) => !isValidPurposeType(randomString)));
+    fc.assert(fc.property(fc.string(), (randomString: string) => {
+      expect(validatePurposeType(randomString)).toBeCmpError();
+    }));
+  });
+
+  test('should not accept an invalid type as its argument', () => {
+    expect(validatePurposeType(123)).toBeCmpError();
   });
 });
 
-describe('isValidConsentString', () => {
+describe('validateConsentString', () => {
   // Consent string tool
   // http://gdpr-demo.labs.quantcast.com/user-examples/cookie-workshop.html
   test('Should accept IAB consent strings', () => {
     const validConsentStrings = ['BOkhG-BOkhG-BAAABAENAAAAAAAAoAA'];
     validConsentStrings.forEach(
         consentString =>
-            expect(isValidConsentString(consentString)).toBe(true));
+            expect(validateConsentString(consentString)).toNotBeCmpError());
   });
 
   test('Should not accept random IAB consent strings', () => {
-    fc.assert(fc.property(
-        fc.unicodeString(),
-        (randomUnicodeString: string) =>
-            !isValidConsentString(randomUnicodeString)));
+    fc.assert(fc.property(fc.unicodeString(), (randomUnicodeString: string) => {
+      expect(validateConsentString(randomUnicodeString)).toBeCmpError();
+    }));
+  });
+
+  test('should not accept an invalid type as its argument', () => {
+    expect(validateConsentString(123)).toBeCmpError();
   });
 });
 
-describe('isValidPurposes', () => {
+describe('validatePurposes', () => {
   const validPurposes = {
     'essential': false,
     'performance': false,
     'functionality': false,
-    'presonalisedAdvertising': false
+    'personalisedAdvertising': false
   };
   const purposesArbitrary = fc.constantFrom(...purposeTypes);
 
   test('accepts complete list of purposes', () => {
-    expect(isValidPurposes(validPurposes)).toBeTruthy();
+    expect(validatePurposes(validPurposes)).toEqual(validPurposes);
   });
 
   test('Should not accept random strings in keys', () => {
@@ -326,9 +340,10 @@ describe('isValidPurposes', () => {
                       fc.string(), [fc.boolean()], 1, 5, false, false))
             .filter(o => Object.keys(o).length > 0);
 
-    fc.assert(fc.property(
-        invalidKeysPurposesListArbitrary,
-        (invalidPurposes) => !isValidPurposes(invalidPurposes)));
+    fc.assert(
+        fc.property(invalidKeysPurposesListArbitrary, (invalidPurposes) => {
+          expect(validatePurposes(invalidPurposes)).toBeCmpError();
+        }));
   });
 
   test('does not accept an object missing required purposes', () => {
@@ -337,20 +352,31 @@ describe('isValidPurposes', () => {
 
     purposeTypes.forEach((purposeKey) => {
       const invalidPurposes = removeProperty(purposeKey, validPurposes);
-      expect(parseJson(JSON.stringify(invalidPurposes))).toBeNull();
+      expect(validatePurposes(invalidPurposes)).toBeCmpError();
     });
+  });
+
+  test('fails with a helpful message for purpose with wrong type', () => {
+    const invalidPurposes =
+        Object.assign({}, validPurposes, {'essential': 123});
+    const result = validatePurposes(invalidPurposes);
+    if (isCmpError(result)) {
+      expect(result.message).toContain('essential');
+    } else {
+      fail('call should have failed beacuse essential has the wrong type');
+    }
   });
 });
 
-describe('isValidBrowserId', () => {
+describe('validateBrowserId', () => {
   test('Should not accept an empty string', () => {
-    expect(isValidBrowserId('')).toBe(false);
+    expect(validateBrowserId('')).toBeCmpError();
   });
 
   test('Should accept any non-empty string', () => {
     const nonEmptyString = fc.string(1, 40).filter(s => s.trim().length > 0);
-    fc.assert(fc.property(
-        nonEmptyString,
-        (nonEmptyString: string) => isValidBrowserId(nonEmptyString)));
+    fc.assert(fc.property(nonEmptyString, (nonEmptyString: string) => {
+      expect(validateBrowserId(nonEmptyString)).toNotBeCmpError();
+    }));
   });
 });

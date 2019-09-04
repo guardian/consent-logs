@@ -3,6 +3,7 @@ import AWS from 'aws-sdk';
 import {provider} from 'aws-sdk/lib/credentials/credential_provider_chain';
 
 import {AmpConsentBody, consentModelFrom, getAmpConsentBody} from './amp';
+import {CmpError, isCmpError} from './errors';
 import {CMPCookie, parseJson} from './model';
 
 const STREAM_NAME: string|undefined = process.env.STREAM_NAME;
@@ -96,17 +97,24 @@ const handleAmp =
     (event: APIGatewayProxyEvent, context: Context,
      callback: APIGatewayProxyCallback, streamName: string) => {
       if (event.body) {
-        const ampConsentBody: undefined|AmpConsentBody =
+        const ampConsentBody: CmpError|AmpConsentBody =
             getAmpConsentBody(event.body);
-        if (ampConsentBody) {
-          const cmpCookie: CMPCookie = consentModelFrom(
-              ampConsentBody.ampUserId, ampConsentBody.consentState);
-          putConsentToFirehose(cmpCookie, callback, streamName);
-        } else {
+        if (isCmpError(ampConsentBody)) {
           console.log(`Error validating AMP body ${event.body}`);
           callback(
-              'Body for AMP consent request seems to be invalid',
+              ampConsentBody.message,
               bad('Body for AMP consent request seems to be invalid'));
+        } else {
+          const cmpCookie: CMPCookie = consentModelFrom(
+              ampConsentBody.ampUserId, ampConsentBody.consentState);
+          try {
+            putConsentToFirehose(cmpCookie, callback, streamName);
+          } catch (exception) {
+            console.error(
+                'Error while writing AMP submission to Kinesis stream',
+                exception);
+            callback('Upstream error', bad('Unable to write consent record'));
+          }
         }
       } else {
         callback(
@@ -124,22 +132,33 @@ const handler: APIGatewayProxyHandler =
         } else if (event.path === '/report') {
           // make consent record
           if (event.body != null) {
-            const consentRecord = parseJson(event.body);
-            if (consentRecord != null) {
-              putConsentToFirehose(consentRecord, callback, STREAM_NAME);
-            } else {
-              console.log(`Error validating request body ${event.body}`);
+            const consentResult = parseJson(event.body);
+            if (isCmpError(consentResult)) {
+              console.log(
+                  `Error '${consentResult.message}' validating request body ${
+                      event.body}`);
               callback(
                   'Body for consent request seems to be invalid',
-                  bad('Body for consent request seems to be invalid'));
+                  bad('Body for consent request seems to be invalid: ' +
+                      consentResult.message));
+            } else {
+              try {
+                putConsentToFirehose(consentResult, callback, STREAM_NAME);
+              } catch (exception) {
+                console.error(
+                    'Error while writing consent to Kinesis stream', exception);
+                callback(
+                    'Upstream error', bad('Unable to write consent record'));
+              }
             }
           } else {
-            callback('Missing params', bad('Missing required parameters'));
+            callback('No body provided', bad('No body provided'));
           }
         } else {
           callback('Not found', notFound('Not found'));
         }
       } else {
+        console.error('No STREAM_NAME available');
         callback(
             'Missing STREAM_NAME from the environment',
             serviceUnavailable(
