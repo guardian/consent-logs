@@ -30,48 +30,33 @@ const fh = new AWS.Firehose({
   credentialProvider: getCredentialProviderChain(),
 });
 
-function ok(message: string): APIGatewayProxyResult {
-  return {
-    statusCode: 200,
+function respond(
+    statusCode: number, body: {}, callback: APIGatewayProxyCallback): void {
+  callback(null, {
+    statusCode,
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*'
     },
-    body: JSON.stringify({response: message})
-  };
+    body: JSON.stringify(body)
+  });
 }
 
-function bad(message: string): APIGatewayProxyResult {
-  return {
-    statusCode: 400,
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*'
-    },
-    body: JSON.stringify({response: message})
-  };
+function ok(message: string, callback: APIGatewayProxyCallback): void {
+  respond(200, {response: message}, callback);
 }
 
-function notFound(message: string): APIGatewayProxyResult {
-  return {
-    statusCode: 404,
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*'
-    },
-    body: JSON.stringify({response: message})
-  };
+function bad(message: string, callback: APIGatewayProxyCallback): void {
+  respond(400, {response: message}, callback);
 }
 
-function serviceUnavailable(message: string): APIGatewayProxyResult {
-  return {
-    statusCode: 503,
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*'
-    },
-    body: JSON.stringify({response: message})
-  };
+function notFound(message: string, callback: APIGatewayProxyCallback): void {
+  respond(404, {response: message}, callback);
+}
+
+function serviceUnavailable(
+    message: string, callback: APIGatewayProxyCallback): void {
+  respond(503, {response: message}, callback);
 }
 
 const putConsentToFirehose =
@@ -84,12 +69,13 @@ const putConsentToFirehose =
           },
           (err, data) => {
             if (err) {
-              console.log(err, err.stack);
+              console.log('Error writing to kinesis stream', err, err.stack);
+              serviceUnavailable('Could not save consent record', callback);
             }  // an error occurred
             else {
-              console.log(data);
+              console.log('seccusfully added record to Kinesis stream');
+              ok(data.RecordId, callback);
             }  // successful response, remove later.
-            callback(err, ok(data.RecordId));
           });
     };
 
@@ -100,10 +86,9 @@ const handleAmp =
         const ampConsentBody: CmpError|AmpConsentBody =
             getAmpConsentBody(event.body);
         if (isCmpError(ampConsentBody)) {
-          console.log(`Error validating AMP body ${event.body}`);
-          callback(
-              ampConsentBody.message,
-              bad('Body for AMP consent request seems to be invalid'));
+          console.log(`Error '${ampConsentBody.message}' validating AMP body ${
+              event.body}`);
+          bad('Body for AMP consent request seems to be invalid', callback);
         } else {
           const cmpCookie: CMPCookie = consentModelFrom(
               ampConsentBody.ampUserId, ampConsentBody.consentState);
@@ -113,13 +98,12 @@ const handleAmp =
             console.error(
                 'Error while writing AMP submission to Kinesis stream',
                 exception);
-            callback('Upstream error', bad('Unable to write consent record'));
+            bad('Unable to write consent record', callback);
           }
         }
       } else {
-        callback(
-            'No body provided in AMP request',
-            bad('No body provided in AMP request'));
+        console.log('No request body');
+        bad('No request body', callback);
       }
     };
 
@@ -137,33 +121,32 @@ const handler: APIGatewayProxyHandler =
               console.log(
                   `Error '${consentResult.message}' validating request body ${
                       event.body}`);
-              callback(
-                  'Body for consent request seems to be invalid',
-                  bad('Body for consent request seems to be invalid: ' +
-                      consentResult.message));
+              bad(`Body for consent request seems to be invalid: ${
+                      consentResult.message}`,
+                  callback);
             } else {
               try {
                 putConsentToFirehose(consentResult, callback, STREAM_NAME);
               } catch (exception) {
                 console.error(
                     'Error while writing consent to Kinesis stream', exception);
-                callback(
-                    'Upstream error', bad('Unable to write consent record'));
+                bad('Unable to write consent record', callback);
               }
             }
           } else {
-            callback('No body provided', bad('No body provided'));
+            console.log('No body provided');
+            bad('No body provided', callback);
           }
         } else {
-          callback('Not found', notFound('Not found'));
+          console.log('Not found');
+          notFound('Not found', callback);
         }
       } else {
-        console.error('No STREAM_NAME available');
-        callback(
-            'Missing STREAM_NAME from the environment',
-            serviceUnavailable(
-                `Missing STREAM_NAME from the environment: STREAM_NAME: ${
-                    STREAM_NAME}`));
+        console.error('Missing STREAM_NAME from the environment');
+        serviceUnavailable(
+            `Missing STREAM_NAME from the environment: STREAM_NAME: ${
+                STREAM_NAME}`,
+            callback);
       }
     };
 
