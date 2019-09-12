@@ -94,7 +94,7 @@ Resources:
       Description: Logs consent to the Data Lake
       Handler: index.handler
       Role: !GetAtt LambdaRole.Arn
-      Runtime: nodejs8.10
+      Runtime: nodejs10.x
       Code:
         S3Bucket: !Ref DistBucket
         S3Key: !Sub
