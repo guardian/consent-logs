@@ -73,7 +73,7 @@ const putConsentToFirehose =
               serviceUnavailable('Could not save consent record', callback);
             } else {
               console.log(
-                  'seccusfully added record to Kinesis stream', data.RecordId);
+                  'successfully added record to Kinesis stream', data.RecordId);
               ok('ok', callback);
             }
           });
