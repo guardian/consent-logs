@@ -94,7 +94,7 @@ Resources:
       Description: Logs consent to the Data Lake
       Handler: index.handler
       Role: !GetAtt LambdaRole.Arn
-      Runtime: nodejs8.10
+      Runtime: nodejs10.x
       Code:
         S3Bucket: !Ref DistBucket
         S3Key: !Sub
@@ -136,11 +136,13 @@ Resources:
         # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-kinesisfirehose-deliverystream.html
         Prefix: !Join
           - ''
-          - - consent-logs
+          - - consent-logs/
+            - !Ref Stage
             - '/data/date=!{timestamp:YYYY}-!{timestamp:MM}-!{timestamp:dd}/'
         ErrorOutputPrefix: !Join
           - ''
-          - - consent-logs
+          - - consent-logs/
+            - !Ref Stage
             - '/error/!{firehose:error-output-type}/date=!{timestamp:YYYY}-!{timestamp:MM}-!{timestamp:dd}/'
         RoleARN: !GetAtt DeliveryRole.Arn
   

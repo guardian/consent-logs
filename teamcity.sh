@@ -4,6 +4,7 @@ set -e
 npm install
 # Will place .js files in dist
 npm run build
+npm run test
 
 # These also need to be in the RiffRaff package
 cp package.json dist

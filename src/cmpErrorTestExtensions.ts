@@ -1,6 +1,6 @@
 import prettyFormat from 'pretty-format';
 
-import {CmpError, cmpError, collectCmpErrors, collectCmpErrors4, collectCmpErrors6, isCmpError} from './errors';
+import {isCmpError} from './errors';
 
 const addCmpExtensions = () => {
   expect.extend({
