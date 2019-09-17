@@ -1,5 +1,5 @@
 import {ConsentString} from 'consent-string';
-import {CmpError, cmpError, collectCmpErrors, collectCmpErrors6, isCmpError} from './errors';
+import {CmpError, cmpError, collectCmpErrors, collectCmpErrors5, isCmpError} from './errors';
 
 enum PurposeType {
   'essential',
@@ -159,21 +159,21 @@ const validateTime = (time: any): number|CmpError => {
 const validateObject =
     /* tslint:disable-next-line:no-any */
     (jsonObject: {[key: string]: any}): CmpError|CMPCookie => {
-      const result = collectCmpErrors6(
+      const result = collectCmpErrors5(
           validateConsentString(jsonObject.iab),
-          validateVersion(jsonObject.version), validateTime(jsonObject.time),
+          validateVersion(jsonObject.version),
           validateSourceType(jsonObject.source),
           validatePurposes(jsonObject.purposes),
           validateBrowserId(jsonObject.browserId));
       if (isCmpError(result)) {
         return result;
       } else {
-        const [consentString, version, time, sourceType, purposes, browserId] =
+        const [consentString, version, sourceType, purposes, browserId] =
             result;
         return {
           iab: consentString,
           version,
-          time,
+          time: Date.now(),
           source: sourceType,
           purposes,
           browserId
@@ -199,6 +199,7 @@ export let _ = {
   validateConsentString,
   validatePurposes,
   validateBrowserId,
+  validateObject,
   sourceTypes,
   purposeTypes,
   isNonEmpty,

@@ -1,6 +1,7 @@
 
 /* tslint:disable:no-any */
 import fc from 'fast-check';
+import {advanceTo, clear as resetTime} from 'jest-date-mock';
 
 import {addCmpExtensions} from './cmpErrorTestExtensions';
 import {isCmpError} from './errors';
@@ -24,7 +25,6 @@ describe('parseJson', () => {
   const validObject = {
     iab: 'BOkNAntOkNAntAAABAENAAAAAAAAoAA',
     version: '1',
-    time: 123,
     source: 'www',
     purposes: {
       'essential': false,
@@ -98,23 +98,22 @@ describe('parseJson', () => {
   });
 
   describe('time key', () => {
-    test('Should only accept valid values', () => {
-      fc.assert(fc.property(fc.integer(), (randomInteger: number) => {
-        const validObjectTime =
-            Object.assign({}, validObject, {time: randomInteger});
-        expect(parseJson(JSON.stringify(validObjectTime)))
-            .toMatchObject(validObjectTime);
-      }));
+    const now = Date.now();
+    beforeAll(() => {
+      advanceTo(now);
     });
 
-    test('Should not accept invalid types', () => {
-      const invalidType: fc.Arbitrary<any> =
-          fc.anything().filter(anyValue => typeof anyValue !== 'number');
-      fc.assert(fc.property(invalidType, (invalidType: any) => {
-        const invalidObject =
-            Object.assign({}, validObject, {time: invalidType});
-        expect(parseJson(JSON.stringify(invalidObject))).toBeCmpError();
-      }));
+    afterAll(() => {
+      resetTime();
+    });
+
+    test('should be set to the current server time', () => {
+      const result = parseJson(JSON.stringify(validObject));
+      if (isCmpError(result)) {
+        fail(`Expected a valid CMP record, got an error, ${result.message}`);
+      } else {
+        expect(new Date(result.time).getTime()).toBe(now);
+      }
     });
   });
 
@@ -156,7 +155,12 @@ describe('parseJson', () => {
     });
 
     test('Should accept valid purposes', () => {
-      expect(parseJson(JSON.stringify(validObject))).toEqual(validObject);
+      const result = parseJson(JSON.stringify(validObject));
+      if (isCmpError(result)) {
+        fail(`Expected a valid result, got '${result.message}'`);
+      } else {
+        expect(result.purposes).toEqual(validObject.purposes);
+      }
     });
 
     test('Should reject invalid purposes keys', () => {
