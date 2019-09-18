@@ -1,5 +1,5 @@
 import {ConsentString} from 'consent-string';
-import {CmpError, cmpError, collectCmpErrors, collectCmpErrors6, isCmpError} from './errors';
+import {CmpError, cmpError, collectCmpErrors, collectCmpErrors5, isCmpError} from './errors';
 
 enum PurposeType {
   'essential',
@@ -24,7 +24,7 @@ type PurposeList = {
   [key in PurposeString]: boolean
 };
 
-type CMPCookie = {
+type CMPRecord = {
   iab: string,
   version: string,
   time: number,
@@ -49,7 +49,10 @@ const validateSourceType = (sourceType: any): SourceString|CmpError => {
   if (typeof sourceType === 'string') {
     const valid = sourceTypes.includes(sourceType);
     // cast is safe because we've checked this is a sourceType
-    return valid ? sourceType as SourceString : cmpError('invalid sourceType');
+    return valid ?
+        sourceType as SourceString :
+        cmpError(
+            `invalid sourceType, expected one of ${sourceTypes.join(', ')}`);
   } else {
     return cmpError('expected string for sourceType');
   }
@@ -158,22 +161,22 @@ const validateTime = (time: any): number|CmpError => {
 
 const validateObject =
     /* tslint:disable-next-line:no-any */
-    (jsonObject: {[key: string]: any}): CmpError|CMPCookie => {
-      const result = collectCmpErrors6(
+    (jsonObject: {[key: string]: any}): CmpError|CMPRecord => {
+      const result = collectCmpErrors5(
           validateConsentString(jsonObject.iab),
-          validateVersion(jsonObject.version), validateTime(jsonObject.time),
+          validateVersion(jsonObject.version),
           validateSourceType(jsonObject.source),
           validatePurposes(jsonObject.purposes),
           validateBrowserId(jsonObject.browserId));
       if (isCmpError(result)) {
         return result;
       } else {
-        const [consentString, version, time, sourceType, purposes, browserId] =
+        const [consentString, version, sourceType, purposes, browserId] =
             result;
         return {
           iab: consentString,
           version,
-          time,
+          time: Date.now(),
           source: sourceType,
           purposes,
           browserId
@@ -181,7 +184,7 @@ const validateObject =
       }
     };
 
-const parseJson = (json: string): CmpError|CMPCookie => {
+const parseJson = (json: string): CmpError|CMPRecord => {
   try {
     const parsedJson: object = JSON.parse(json);
     return validateObject(parsedJson);
@@ -190,7 +193,7 @@ const parseJson = (json: string): CmpError|CMPCookie => {
   }
 };
 
-export {parseJson, CMPCookie};
+export {parseJson, CMPRecord};
 
 export let _ = {
   isNumber,
@@ -199,6 +202,7 @@ export let _ = {
   validateConsentString,
   validatePurposes,
   validateBrowserId,
+  validateObject,
   sourceTypes,
   purposeTypes,
   isNonEmpty,

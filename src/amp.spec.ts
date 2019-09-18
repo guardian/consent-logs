@@ -1,12 +1,11 @@
 /* tslint:disable:no-any */
 import {ConsentString} from 'consent-string';
 import fc from 'fast-check';
-import {advanceTo, clear} from 'jest-date-mock';
+import {advanceTo, clear as resetTime} from 'jest-date-mock';
 
-import {_} from './amp';
+import {_ as _amp} from './amp';
 import {addCmpExtensions} from './cmpErrorTestExtensions';
-import {isCmpError} from './errors';
-import {parseJson} from './model';
+import {_ as _model} from './model';
 import VENDOR_LIST from './resources/vendorlist.json';
 
 addCmpExtensions();
@@ -18,7 +17,9 @@ const {
   consentStringFromAmpConsent,
   consentModelFrom,
   getAmpConsentBody
-} = _;
+} = _amp;
+
+const {validateObject} = _model;
 
 const oneToTwentyFour = [
   1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12,
@@ -39,7 +40,7 @@ describe('Full Consent', () => {
     });
 
     afterAll(() => {
-      clear();
+      resetTime();
     });
 
     test('Should contain the latest timestamp', () => {
@@ -55,7 +56,7 @@ describe('Full Consent', () => {
     });
 
     afterAll(() => {
-      clear();
+      resetTime();
     });
 
     test('Should contain the latest timestamp', () => {
@@ -125,7 +126,7 @@ describe('No Consent', () => {
     });
 
     afterAll(() => {
-      clear();
+      resetTime();
     });
 
     test('Should contain the latest timestamp', () => {
@@ -141,7 +142,7 @@ describe('No Consent', () => {
     });
 
     afterAll(() => {
-      clear();
+      resetTime();
     });
 
     test('Should contain the latest timestamp', () => {
@@ -245,20 +246,23 @@ describe('fullAmpConsent', () => {
 
 describe('consentModelFrom', () => {
   describe('full consent', () => {
-    test('Generated consent object is valid', () => {
+    test('Returns a valid CMP object', () => {
+      const consentObject = consentModelFrom('abc', true);
+      expect(validateObject(consentObject)).toNotBeCmpError();
+    });
+
+    test('Generated IAB consent string is valid', () => {
+      const consentObject = consentModelFrom('abc', true);
+      expect(() => new ConsentString(consentObject.iab)).not.toThrow();
+    });
+
+    test('creates a fully consented IAB string', () => {
       const consentObject = consentModelFrom('abc', true);
       const iabConsent = new ConsentString(consentObject.iab);
-      // expect that checks IAB consent string is correct
-    });
-
-    test('creates a fully consented IAB string', () => {
-      const fullConsent = consentModelFrom('abc', true);
-      expect(parseJson(JSON.stringify(fullConsent))).toEqual(fullConsent);
-    });
-
-    test('creates a fully consented IAB string', () => {
-      const fullConsent = consentModelFrom('abc', true);
-      expect(parseJson(JSON.stringify(fullConsent))).toEqual(fullConsent);
+      const expected = ALL_ALLOWED_PURPOSES.map(id => [id, true]);
+      expect(
+          ALL_ALLOWED_PURPOSES.map(id => [id, iabConsent.isPurposeAllowed(id)]))
+          .toEqual(expected);
     });
 
     describe('PECR purposes', () => {
@@ -286,14 +290,18 @@ describe('consentModelFrom', () => {
 
 
   describe('without consent', () => {
-    test('Generated consent object is valid', () => {
-      const noConsent = consentModelFrom('abc', false);
-      expect(parseJson(JSON.stringify(noConsent))).toEqual(noConsent);
+    test('Returns a valid CMP object', () => {
+      const consentObject = consentModelFrom('abc', false);
+      expect(validateObject(consentObject)).toNotBeCmpError();
     });
 
-    test('creates a fully consented IAB string', () => {
-      const fullConsent = consentModelFrom('abc', false);
-      expect(parseJson(JSON.stringify(fullConsent))).toEqual(fullConsent);
+    describe('creates a fully non-consented IAB string', () => {
+      const consentObject = consentModelFrom('abc', false);
+      const iabConsent = new ConsentString(consentObject.iab);
+      const expected = ALL_ALLOWED_PURPOSES.map(id => [id, false]);
+      expect(
+          ALL_ALLOWED_PURPOSES.map(id => [id, iabConsent.isPurposeAllowed(id)]))
+          .toEqual(expected);
     });
 
     test('uses the provided amp user ID as the browser ID', () => {
