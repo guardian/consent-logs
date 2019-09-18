@@ -65,7 +65,7 @@ const putConsentToFirehose =
       fh.putRecord(
           {
             DeliveryStreamName: streamName,
-            Record: {Data: new Buffer(JSON.stringify(cmpCookie))}
+            Record: {Data: new Buffer(`${JSON.stringify(cmpCookie)}\n`)}
           },
           (err, data) => {
             if (err) {
