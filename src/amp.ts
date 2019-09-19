@@ -1,7 +1,7 @@
 import {ConsentString} from 'consent-string';
 
 import {cmpError, CmpError, collectCmpErrors4, isCmpError} from './errors';
-import {CMPRecord} from './model';
+import {CmpRecordV1} from './model';
 import VENDOR_LIST from './resources/vendorlist.json';
 
 const ALL_ALLOWED_PURPOSES: number[] = [
@@ -33,17 +33,14 @@ const noConsent = (): ConsentString => {
 const consentStringFromAmpConsent = (consent: boolean): string =>
     consent ? fullConsent().getConsentString() : noConsent().getConsentString();
 
-const consentModelFrom = (ampUserId: string, ampConsent: boolean): CMPRecord =>
-    ({
+const consentModelFrom =
+    (ampUserId: string, ampConsent: boolean): CmpRecordV1 => ({
       iab: consentStringFromAmpConsent(ampConsent),
       source: 'amp',
       version: '1',
       time: Date.now(),
       browserId: ampUserId,
       purposes: {
-        'essential': ampConsent,
-        'performance': ampConsent,
-        'functionality': ampConsent,
         'personalisedAdvertising': ampConsent,
       },
     });

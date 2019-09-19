@@ -17,7 +17,7 @@ function collectCmpErrors4<A, B, C, D>(
     return [a, b, c, d];
   } else {
     const combinedError =
-        [a, b, c, d].filter(isCmpError).map((err) => err.message).join(', ');
+        [a, b, c, d].filter(isCmpError).map((err) => err.message).join('; ');
     return cmpError(combinedError);
   }
 }
@@ -30,7 +30,7 @@ function collectCmpErrors5<A, B, C, D, E>(
     return [a, b, c, d, e];
   } else {
     const combinedError =
-        [a, b, c, d, e].filter(isCmpError).map((err) => err.message).join(', ');
+        [a, b, c, d, e].filter(isCmpError).map((err) => err.message).join('; ');
     return cmpError(combinedError);
   }
 }
@@ -38,7 +38,7 @@ function collectCmpErrors5<A, B, C, D, E>(
 function collectCmpErrors<T>(values: Array<CmpError|T>): CmpError|T[] {
   if (values.some(isCmpError)) {
     const combinedMessage =
-        values.filter(isCmpError).map((err) => err.message).join(', ');
+        values.filter(isCmpError).map((err) => err.message).join('; ');
     return cmpError(combinedMessage);
   } else {
     // no errors exist, so we know that this is `T[]`

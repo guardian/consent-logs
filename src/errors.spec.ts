@@ -75,7 +75,7 @@ describe('collectCmpErrors4', () => {
     const d: number[]|CmpError = [1, 2, 3];
     const result = collectCmpErrors4(a, b, c, d);
     expect(result).toBeCmpErrorWithMessage(
-        'test error message, another error message');
+        'test error message; another error message');
   });
 });
 
@@ -153,7 +153,7 @@ describe('collectCmpErrors6', () => {
     const e: string[]|CmpError = ['foo', 'bar'];
     const result = collectCmpErrors5(a, b, c, d, e);
     expect(result).toBeCmpErrorWithMessage(
-        'test error message, another error message');
+        'test error message; another error message');
   });
 });
 
@@ -184,7 +184,7 @@ describe('collectCmpErrors', () => {
     const result = collectCmpErrors(
         [cmpError('test error message'), cmpError('another error message'), 1]);
     expect(result).toBeCmpErrorWithMessage(
-        'test error message, another error message');
+        'test error message; another error message');
   });
 });
 
