@@ -1,6 +1,6 @@
 import {ConsentString} from 'consent-string';
 
-import {CmpError, cmpError, collectCmpErrors, collectCmpErrors4, isCmpError} from './errors';
+import {CmpError, cmpError, collectCmpErrors, collectCmpErrors5, isCmpError} from './errors';
 import {CmpRecordV1, CmpRecordV2, Source, sources, V1PurposeObj, v1Purposes, V2PurposeObj, v2Purposes, Version, versions} from './model';
 import {assertUnreachable} from './utilities';
 
@@ -13,6 +13,23 @@ const validateBoolean = (value: any, label: string): boolean|CmpError => {
     return cmpError(`expected boolean for ${label}, got ${value}`);
   }
 };
+
+const validateOptionalString =
+    /* tslint:disable-next-line:no-any */
+    (value: any, label: string): string|undefined|CmpError => {
+      if (typeof value === 'string') {
+        if (value.length > 0) {
+          return value;
+        } else {
+          return cmpError(`empty string is not allowed for ${label}`);
+        }
+      } else if (typeof value === 'undefined') {
+        return undefined;
+      } else {
+        return cmpError(
+            `${label} is optional, but must be a string if present`);
+      }
+    };
 
 const validateStringKey =
     /* tslint:disable-next-line:no-any */
@@ -171,22 +188,25 @@ const validateObject =
 const validateV1Object =
     /* tslint:disable-next-line:no-any */
     (jsonObject: {[key: string]: any}): CmpError|CmpRecordV1 => {
-      const result = collectCmpErrors4(
+      const result = collectCmpErrors5(
           validateIabConsentString(jsonObject.iab),
           validateSourceType(jsonObject.source),
           validateV1Purposes(jsonObject.purposes),
-          validateBrowserId(jsonObject.browserId));
+          validateBrowserId(jsonObject.browserId),
+          validateOptionalString(jsonObject.variant, 'variant'));
       if (isCmpError(result)) {
         return result;
       } else {
-        const [consentString, sourceType, purposes, browserId] = result;
+        const [consentString, sourceType, purposes, browserId, variant] =
+            result;
         return {
           iab: consentString,
           version: '1',
           time: Date.now(),
           source: sourceType,
           purposes,
-          browserId
+          browserId,
+          variant
         };
       }
     };
@@ -194,22 +214,25 @@ const validateV1Object =
 const validateV2Object =
     /* tslint:disable-next-line:no-any */
     (jsonObject: {[key: string]: any}): CmpError|CmpRecordV2 => {
-      const result = collectCmpErrors4(
+      const result = collectCmpErrors5(
           validateIabConsentString(jsonObject.iab),
           validateSourceType(jsonObject.source),
           validateV2Purposes(jsonObject.purposes),
-          validateBrowserId(jsonObject.browserId));
+          validateBrowserId(jsonObject.browserId),
+          validateOptionalString(jsonObject.variant, 'variant'));
       if (isCmpError(result)) {
         return result;
       } else {
-        const [consentString, sourceType, purposes, browserId] = result;
+        const [consentString, sourceType, purposes, browserId, variant] =
+            result;
         return {
           iab: consentString,
           version: '2',
           time: Date.now(),
           source: sourceType,
           purposes,
-          browserId
+          browserId,
+          variant
         };
       }
     };
@@ -233,6 +256,7 @@ export let _ = {
   validateBrowserId,
   validateVersion,
   validateObject,
+  validateOptionalString,
   validateStringKey,
   validateBoolean,
   isNonEmpty,
