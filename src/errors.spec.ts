@@ -16,6 +16,10 @@ describe('isCmpError', () => {
     const value: string|CmpError = 'not an error';
     expect(isCmpError(value)).toBe(false);
   });
+
+  test('returns false for an undefined value', () => {
+    expect(isCmpError(undefined)).toBe(false);
+  });
 });
 
 describe('collectCmpErrors4', () => {
