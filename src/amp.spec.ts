@@ -265,30 +265,30 @@ describe('consentModelFrom', () => {
           .toEqual(expected);
     });
 
-    // V1 schema does not include PECR purposes
-    // describe('PECR purposes', () => {
-    //   test('should set essential to true', () => {
-    //     const consentObject = consentModelFrom('abc', true);
-    //     expect(consentObject.purposes.essential).toEqual(true);
-    //   });
+    describe('purposes', () => {
+      test('should set personalisedAdvertising to true', () => {
+        const consentObject = consentModelFrom('abc', true);
+        expect(consentObject.purposes.personalisedAdvertising).toEqual(true);
+      });
 
-    //   test('should set performance to true', () => {
-    //     const consentObject = consentModelFrom('abc', true);
-    //     expect(consentObject.purposes.performance).toEqual(true);
-    //   });
+      // V1 schema does not include PECR purposes, these will be useful for v2
 
-    //   test('should set functionality to true', () => {
-    //     const consentObject = consentModelFrom('abc', true);
-    //     expect(consentObject.purposes.functionality).toEqual(true);
-    //   });
+      // test('should set essential to true', () => {
+      //   const consentObject = consentModelFrom('abc', true);
+      //   expect(consentObject.purposes.essential).toEqual(true);
+      // });
 
-    //   test('should set personalisedAdvertising to true', () => {
-    //     const consentObject = consentModelFrom('abc', true);
-    //     expect(consentObject.purposes.personalisedAdvertising).toEqual(true);
-    //   });
-    // });
+      // test('should set performance to true', () => {
+      //   const consentObject = consentModelFrom('abc', true);
+      //   expect(consentObject.purposes.performance).toEqual(true);
+      // });
+
+      // test('should set functionality to true', () => {
+      //   const consentObject = consentModelFrom('abc', true);
+      //   expect(consentObject.purposes.functionality).toEqual(true);
+      // });
+    });
   });
-
 
   describe('without consent', () => {
     test('Returns a valid CMP object', () => {
@@ -310,28 +310,29 @@ describe('consentModelFrom', () => {
       expect(consentObject.browserId).toEqual('abc');
     });
 
-    // V1 schema does not include PECR purposes
-    // describe('PECR purposes', () => {
-    //   test('should set essential to false', () => {
-    //     const consentObject = consentModelFrom('abc', false);
-    //     expect(consentObject.purposes.essential).toEqual(false);
-    //   });
+    describe('purposes', () => {
+      test('should set personalisedAdvertising to false', () => {
+        const consentObject = consentModelFrom('abc', false);
+        expect(consentObject.purposes.personalisedAdvertising).toEqual(false);
+      });
 
-    //   test('should set performance to false', () => {
-    //     const consentObject = consentModelFrom('abc', false);
-    //     expect(consentObject.purposes.performance).toEqual(false);
-    //   });
+      // V1 schema does not include PECR purposes, these will be useful for v2
 
-    //   test('should set functionality to false', () => {
-    //     const consentObject = consentModelFrom('abc', false);
-    //     expect(consentObject.purposes.functionality).toEqual(false);
-    //   });
+      // test('should set essential to false', () => {
+      //   const consentObject = consentModelFrom('abc', false);
+      //   expect(consentObject.purposes.essential).toEqual(false);
+      // });
 
-    //   test('should set personalisedAdvertising to false', () => {
-    //     const consentObject = consentModelFrom('abc', false);
-    //     expect(consentObject.purposes.personalisedAdvertising).toEqual(false);
-    //   });
-    // });
+      // test('should set performance to false', () => {
+      //   const consentObject = consentModelFrom('abc', false);
+      //   expect(consentObject.purposes.performance).toEqual(false);
+      // });
+
+      // test('should set functionality to false', () => {
+      //   const consentObject = consentModelFrom('abc', false);
+      //   expect(consentObject.purposes.functionality).toEqual(false);
+      // });
+    });
   });
 });
 
