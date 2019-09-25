@@ -1,10 +1,11 @@
-import {APIGatewayProxyCallback, APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult, Context} from 'aws-lambda';
+import {APIGatewayProxyCallback, APIGatewayProxyEvent, APIGatewayProxyHandler, Context} from 'aws-lambda';
 import AWS from 'aws-sdk';
 import {provider} from 'aws-sdk/lib/credentials/credential_provider_chain';
 
 import {AmpConsentBody, consentModelFrom, getAmpConsentBody} from './amp';
 import {CmpError, isCmpError} from './errors';
-import {CMPRecord, parseJson} from './model';
+import {CmpRecord} from './model';
+import {parseJson} from './validation';
 
 const STREAM_NAME: string|undefined = process.env.STREAM_NAME;
 
@@ -60,12 +61,12 @@ function serviceUnavailable(
 }
 
 const putConsentToFirehose =
-    (cmpCookie: CMPRecord, callback: APIGatewayProxyCallback,
+    (cmpRecord: CmpRecord, callback: APIGatewayProxyCallback,
      streamName: string) => {
       fh.putRecord(
           {
             DeliveryStreamName: streamName,
-            Record: {Data: new Buffer(`${JSON.stringify(cmpCookie)}\n`)}
+            Record: {Data: new Buffer(`${JSON.stringify(cmpRecord)}\n`)}
           },
           (err, data) => {
             if (err) {
@@ -90,7 +91,7 @@ const handleAmp =
               event.body}`);
           bad('Body for AMP consent request seems to be invalid', callback);
         } else {
-          const cmpCookie: CMPRecord = consentModelFrom(
+          const cmpCookie: CmpRecord = consentModelFrom(
               ampConsentBody.ampUserId, ampConsentBody.consentState);
           try {
             putConsentToFirehose(cmpCookie, callback, streamName);
