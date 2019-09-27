@@ -9,6 +9,8 @@ import {sources, v1Purposes, v2Purposes, versions} from './model';
 import {_, parseJson} from './validation';
 
 addCmpExtensions();
+export const removeProperty =
+    (propKey: any, {[propKey]: propValue, ...rest}: any) => rest;
 
 const {
   validateSourceType,
@@ -17,6 +19,7 @@ const {
   validateIabConsentString,
   validateBrowserId,
   validateVersion,
+  validateOptionalString,
   validateStringKey,
   validateBoolean,
   isNonEmpty,
@@ -28,7 +31,8 @@ describe('parseJson', () => {
     version: '1',
     source: 'www',
     purposes: {'personalisedAdvertising': false},
-    browserId: 'abc123-v1'
+    browserId: 'abc123-v1',
+    variant: 'test'
   };
   const validV2Object = {
     iab: 'BOkNAntOkNAntAAABAENAAAAAAAAoAA',
@@ -40,7 +44,8 @@ describe('parseJson', () => {
       'functionality': false,
       'personalisedAdvertising': false
     },
-    browserId: 'abc123-v2'
+    browserId: 'abc123-v2',
+    variant: 'test'
   };
 
   test('Should not parse an empty string', () => {
@@ -82,6 +87,11 @@ describe('parseJson', () => {
           Object.assign({}, validV2Object, {iab: 'invalid IAB string'});
       expect(parseJson(JSON.stringify(invalidObject))).toBeCmpError();
     });
+
+    test('iab is required', () => {
+      const invalidObject = removeProperty('iab', validV2Object);
+      expect(parseJson(JSON.stringify(invalidObject))).toBeCmpError();
+    });
   });
 
   describe('version key', () => {
@@ -101,6 +111,11 @@ describe('parseJson', () => {
       } else {
         expect(result.version).toEqual('2');
       }
+    });
+
+    test('version is required', () => {
+      const invalidObject = removeProperty('version', validV2Object);
+      expect(parseJson(JSON.stringify(invalidObject))).toBeCmpError();
     });
   });
 
@@ -146,6 +161,11 @@ describe('parseJson', () => {
         expect(parseJson(JSON.stringify(invalidObject))).toBeCmpError();
       }));
     });
+
+    test('source is required', () => {
+      const invalidObject = removeProperty('source', validV2Object);
+      expect(parseJson(JSON.stringify(invalidObject))).toBeCmpError();
+    });
   });
 
   describe('purposes key', () => {
@@ -190,10 +210,15 @@ describe('parseJson', () => {
         fail('v1 purposes in v2 object should not pass validation');
       }
     });
+
+    test('purposes is required', () => {
+      const invalidObject = removeProperty('purposes', validV2Object);
+      expect(parseJson(JSON.stringify(invalidObject))).toBeCmpError();
+    });
   });
 
   describe('browserId key', () => {
-    test('Sets the correct browserID in the generated object', () => {
+    test('Sets the correct browserId in the generated object', () => {
       const result = parseJson(JSON.stringify(validV1Object));
       if (isCmpError(result)) {
         fail(`Expected a valid CMP record, got an error, ${result.message}`);
@@ -203,9 +228,30 @@ describe('parseJson', () => {
     });
 
     test('Should not acccept an empty string', () => {
-      const newInvalidObject =
-          Object.assign({}, validV2Object, {browserId: ''});
-      expect(parseJson(JSON.stringify(newInvalidObject))).toBeCmpError();
+      const invalidObject = Object.assign({}, validV2Object, {browserId: ''});
+      expect(parseJson(JSON.stringify(invalidObject))).toBeCmpError();
+    });
+
+    test('browserId is required', () => {
+      const invalidObject = removeProperty('browserId', validV2Object);
+      expect(parseJson(JSON.stringify(invalidObject))).toBeCmpError();
+    });
+  });
+
+  describe('variant key', () => {
+    test('Sets the correct variant in the generated object', () => {
+      const result = parseJson(JSON.stringify(validV1Object));
+      if (isCmpError(result)) {
+        fail(`Expected a valid CMP record, got an error, ${result.message}`);
+      } else {
+        expect(result.variant).toEqual(validV1Object.variant);
+      }
+    });
+
+    test('parsing succeeds when the variant is not present', () => {
+      const v1ObjectWithoutVariant = removeProperty('variant', validV1Object);
+      expect(parseJson(JSON.stringify(v1ObjectWithoutVariant)))
+          .toNotBeCmpError();
     });
   });
 });
@@ -300,8 +346,6 @@ describe('purpose validation', () => {
     });
 
     test('does not accept an object missing required purposes', () => {
-      const removeProperty =
-          (propKey: any, {[propKey]: propValue, ...rest}: any) => rest;
       v1Purposes.forEach((purposeKey) => {
         const invalidPurposes = removeProperty(purposeKey, validV1Purposes);
         expect(validateV1Purposes(invalidPurposes)).toBeCmpError();
@@ -352,8 +396,6 @@ describe('purpose validation', () => {
     });
 
     test('does not accept an object missing required purposes', () => {
-      const removeProperty =
-          (propKey: any, {[propKey]: propValue, ...rest}: any) => rest;
       v2Purposes.forEach((purposeKey) => {
         const invalidPurposes = removeProperty(purposeKey, validV2Purposes);
         expect(validateV2Purposes(invalidPurposes)).toBeCmpError();
@@ -434,6 +476,34 @@ describe('validateIabConsentString', () => {
         fc.anything().filter(anyValue => typeof anyValue !== 'string');
     fc.assert(fc.property(invalidType, (invalidType: any) => {
       expect(validateIabConsentString(invalidType)).toBeCmpError();
+    }));
+  });
+});
+
+describe('validateOptionalString', () => {
+  test('accepts a non-empty string', () => {
+    const nonEmptyStrings = fc.string().filter(s => s.length > 0);
+    fc.assert(fc.property(nonEmptyStrings, (nonEmptyString) => {
+      expect(validateOptionalString(nonEmptyString, 'test'))
+          .toEqual(nonEmptyString);
+    }));
+  });
+
+  test('accepts an object key that does not exist', () => {
+    const obj: any = {};
+    expect(validateOptionalString(obj.key, 'test')).toBeUndefined();
+  });
+
+  test('rejects an empty string', () => {
+    expect(validateOptionalString('', 'test')).toBeCmpError();
+  });
+
+  test('Should not accept invalid types', () => {
+    const invalidType: fc.Arbitrary<any> = fc.anything().filter(
+        anyValue =>
+            typeof anyValue !== 'string' && typeof anyValue !== 'undefined');
+    fc.assert(fc.property(invalidType, (invalidType: any) => {
+      expect(validateOptionalString(invalidType, 'test')).toBeCmpError();
     }));
   });
 });

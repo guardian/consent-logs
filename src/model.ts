@@ -37,7 +37,8 @@ export type CmpRecordV1 = {
   time: number,
   source: Source,
   purposes: V1PurposeObj,
-  browserId: string
+  browserId: string,
+  variant?: string
 };
 // CMP that includes PECR purposes
 export type CmpRecordV2 = {
@@ -46,6 +47,7 @@ export type CmpRecordV2 = {
   time: number,
   source: Source,
   purposes: V2PurposeObj,
-  browserId: string
+  browserId: string,
+  variant?: string
 };
 export type CmpRecord = CmpRecordV1|CmpRecordV2;

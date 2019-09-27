@@ -7,7 +7,11 @@ const cmpError = (message: string): CmpError => {
 };
 
 function isCmpError<T>(value: CmpError|T): value is CmpError {
-  return (value as CmpError).message !== undefined;
+  if (typeof value === 'undefined') {
+    return false;
+  } else {
+    return (value as CmpError).message !== undefined;
+  }
 }
 
 function collectCmpErrors4<A, B, C, D>(
