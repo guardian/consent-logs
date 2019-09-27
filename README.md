@@ -16,11 +16,11 @@ The submission should be an HTTP POST with a JSON body containing a valid consen
 
 #### Schema
 
-The schema is defined in [model.ts](src/model.ts) and validated in [validation.ts](src/validation.ts).
+The schemas are defined in [model.ts](src/model.ts) and validated in [validation.ts](src/validation.ts).
 
 ##### Version 1 (current)
 
-The V1 consent record format is specified by the CmpRecordV1 type in [model.ts](src/model.ts), but this does not exactly match the expected submission format - the time is generated on-server rather than trusting the user's clock.
+The V1 consent record format is specified by the `CmpRecordV1` type in [model.ts](src/model.ts), but this does not exactly match the expected submission format - the time is generated on-server rather than trusting the user's clock.
 
 The expected V1 JSON submission format is as follows:
 
@@ -39,7 +39,7 @@ The expected V1 JSON submission format is as follows:
 
 ###### iab
 
-The [Transparency and Consent Framework](https://github.com/InteractiveAdvertisingBureau/GDPR-Transparency-and-Consent-Framework), version 1.1 [specifies the format for this consent string](https://github.com/InteractiveAdvertisingBureau/GDPR-Transparency-and-Consent-Framework/blob/master/Consent%20string%20and%20vendor%20list%20formats%20v1.1%20Final.md). This library uses the IAB-provided [consent-string npm package](https://www.npmjs.com/package/consent-string) to parse the supplied TCF string.
+The [Transparency and Consent Framework](https://github.com/InteractiveAdvertisingBureau/GDPR-Transparency-and-Consent-Framework), version 1.1 [specifies the format for this consent string](https://github.com/InteractiveAdvertisingBureau/GDPR-Transparency-and-Consent-Framework/blob/master/Consent%20string%20and%20vendor%20list%20formats%20v1.1%20Final.md). This application uses the IAB-provided [consent-string npm package](https://www.npmjs.com/package/consent-string) to parse the supplied TCF string.
 
 ###### version
 
@@ -55,11 +55,11 @@ This is an object of valid purpose keys with a boolean that describes whether th
 
 ###### browserId
 
-This is the Ophan browser ID for the user so that we are able to use these audit logs to evidence the consent for this user, if required.
+The Ophan browser ID for the user. Using this ID means that we are able to use these audit logs to evidence the consent for this user, if required.
 
 ###### variant (optional)
 
-This optional field can be used to specify the specific variant of the CMP that was shown to the user. It's important that we're able to see exactly what the user was shown as part of the audit log. The variant can be specified if testing of the CMP is occuring so that we're able to reconstruct what a user saw.
+This optional field can be used to specify the variant of the CMP that was shown to the user. It's important that we're able to determine exactly what the user was shown as part of the audit log. The variant can be specified if testing of the CMP is occuring so that we're able to reconstruct what a user saw.
 
 ##### Version 2 (future)
 
