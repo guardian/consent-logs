@@ -24,7 +24,7 @@ The V1 consent record format is specified by the CmpRecordV1 type in [model.ts](
 
 The expected V1 JSON submission format is as follows:
 
-```json
+```
 {
     "version": "1", <- selects the v1 schema
     "iab": string, <- a valid IAB TCF v1.1 consent string
