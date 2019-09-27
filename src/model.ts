@@ -24,7 +24,7 @@ export type V2PurposeObj = {
   [key in V2Purposes]: boolean
 };
 
-const sourcesDef = ['cmp-ui', 'ios', 'www', 'support', 'amp'] as const ;
+const sourcesDef = ['www', 'amp'] as const ;
 export const sources = copy(sourcesDef);
 const sourcesEnum = strEnum(sourcesDef);
 export type Source = keyof typeof sourcesEnum;
