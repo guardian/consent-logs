@@ -34,8 +34,8 @@ const fh = new AWS.Firehose({
 });
 
 function respond(
-    statusCode: number, callback: APIGatewayProxyCallback, bodyData?: {},
-    cors?: CorsHeaders): void {
+    statusCode: number, callback: APIGatewayProxyCallback, cors?: CorsHeaders,
+    bodyData?: {}): void {
   const body = bodyData ? JSON.stringify(bodyData) : '';
   if (cors) {
     return callback(null, {
@@ -64,7 +64,7 @@ function respond(
 function ok(
     message: string, callback: APIGatewayProxyCallback,
     cors: CorsHeaders): void {
-  respond(200, callback, {response: message}, cors);
+  respond(200, callback, cors, {response: message});
 }
 
 function okNoContent(
@@ -75,25 +75,25 @@ function okNoContent(
 function bad(
     message: string, callback: APIGatewayProxyCallback,
     cors: CorsHeaders): void {
-  respond(400, callback, {response: message}, cors);
+  respond(400, callback, cors, {response: message});
 }
 
 function notFound(
     message: string, callback: APIGatewayProxyCallback,
     cors: CorsHeaders): void {
-  respond(404, callback, {response: message}, cors);
+  respond(404, callback, cors, {response: message});
 }
 
 function serviceUnavailable(
     message: string, callback: APIGatewayProxyCallback,
     cors?: CorsHeaders): void {
-  respond(503, callback, {response: message}, cors);
+  respond(503, callback, cors, {response: message});
 }
 
 function forbidden(
     message: string, callback: APIGatewayProxyCallback,
     cors?: CorsHeaders): void {
-  respond(403, callback, {response: message}, cors);
+  respond(403, callback, cors, {response: message});
 }
 
 const putConsentToFirehose =
