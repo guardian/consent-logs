@@ -51,7 +51,7 @@ This should be a valid CMP source. For the Guardian's web CMP this will typicall
 
 ###### purposes
 
-This is an object of valid purpose keys with a boolean that describes whether the user gave consent for this purpose. In version 1 the only valid key is `personalisedAdvertising`.
+This is an object of valid purpose keys with a boolean that describes whether the user gave consent for this purpose. In version 1 the only valid key is `personalisedAdvertising`. This stores whether the user will be shown personalised adverts from Ad Manager. For some CMP implementations (e.g. mobile) this is a dedicated question, and for some this is determined from the IAB purpose questions.
 
 ###### browserId
 
@@ -59,7 +59,7 @@ The Ophan browser ID for the user. Using this ID means that we are able to use t
 
 ###### variant (optional)
 
-This optional field can be used to specify the variant of the CMP that was shown to the user. It's important that we're able to determine exactly what the user was shown as part of the audit log. The variant can be specified if testing of the CMP is occuring so that we're able to reconstruct what a user saw.
+This optional field can be used to specify the variant of the CMP that was shown to the user. It's important that we're able to determine exactly what the user was shown as part of the audit log. The variant can be specified if testing of the CMP is occuring so that we're able to reconstruct what a user saw. Consent allowing, this can also be used to measure a variant's effectiveness.
 
 ##### Version 2 (future)
 
@@ -67,7 +67,7 @@ This version introduces the PECR purposes to the consent log record format. The 
 
 ### AMP records
 
-The AMP project includes [https://amp.dev/documentation/components/amp-consent/](its own CMP), which provides an `onUpdateHref` setting to nominate a URL where consent records should be sent. This project expects AMP submissions to be sent to the `/report/amp` endpoint using the `onUpdateHref` mechanism, and that path is designed to parse the submission format specified by the `amp-consent` component.
+The AMP project includes [its own CMP](https://amp.dev/documentation/components/amp-consent/), which provides an `onUpdateHref` setting to nominate a URL where consent records should be sent. This project expects AMP submissions to be sent to the `/report/amp` endpoint using the `onUpdateHref` mechanism, and that path is designed to parse the submission format specified by the `amp-consent` component.
 
 ## Development
 
