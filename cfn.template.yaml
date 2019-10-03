@@ -1,5 +1,27 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: Consent logs stack with Lambda-> Kinesis Firehose-> S3
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+    - Label:
+        default: Config
+      Parameters:
+      - Stage
+      - DistBucket
+      - CorsWhitelist
+    - Label:
+        default: Networking
+      Parameters:
+      - FrontendVpcId
+      - FrontendSubnets
+    - Label:
+        default: DNS
+      Parameters:
+      - DomainName
+      - HostedZoneId
+      - CertificateArn
+
 Parameters:
   Stage:
     Description: Stage name
@@ -12,18 +34,21 @@ Parameters:
     Description: S3 bucket holding the lambda code
     Type: String
     Default: aws-frontend-artifacts
+  CorsWhitelist:
+    Description: Whitelisted domains for CORS access, comma-separated with preceeding . to allow all subdomains
+    Type: String
   FrontendVpcId:
     Description: Frontend VPC ID
     Type: AWS::EC2::VPC::Id
   FrontendSubnets:
     Description: Frontend Subnets to launch ALB into
     Type: List<AWS::EC2::Subnet::Id>
-  HostedZoneId:
-    Description: The HostedZone where the CNAME RecordSet will live in
-    Type: AWS::Route53::HostedZone::Id
   DomainName:
     Description: The fully qualified domain name within the hosted zone (has to match Hosted Zone domain AND certificate domain)
     Type: String
+  HostedZoneId:
+    Description: The HostedZone where the CNAME RecordSet will live in
+    Type: AWS::Route53::HostedZone::Id
   CertificateArn:
     Description: The ARN of the certificate that the ALB will use to serve requests (Domain on certificate has to match DomainName)
     Type: String
@@ -106,6 +131,7 @@ Resources:
       Environment:
         Variables:
           STREAM_NAME: !Ref KinesisFirehoseDeliveryStream
+          CORS_WHITELIST: !Ref CorsWhitelist
       Tags:
         - { Key: Stack, Value: !FindInMap [Constants, Stack, Value] }
         - { Key: App, Value: !FindInMap [Constants, App, Value] }
