@@ -24,7 +24,7 @@ export type V2PurposeObj = {
   [key in V2Purposes]: boolean
 };
 
-const sourcesDef = ['www', 'amp'] as const ;
+const sourcesDef = ['www', 'dcr', 'amp'] as const ;
 export const sources = copy(sourcesDef);
 const sourcesEnum = strEnum(sourcesDef);
 export type Source = keyof typeof sourcesEnum;
